@@ -254,4 +254,44 @@ GO
 
 --BROLOSY PART HERE
 ---------------------------------------------------------------------------------------
---2.3 (A)
+--2.3 (A) MAKE SURE OF NULL VALUES AND FINANCIAL STATUS
+CREATE PROC Procedures_StudentRegistration
+	@first_name varchar(40), 
+	@last_name varchar(40), 
+	@password varchar(40), 
+	@faculty varchar(40), 
+	@email varchar(40), 
+	@major varchar(40), 
+	@Semester int,
+	@StudentID int OUTPUT
+	As
+	Insert Into Student(f_name,l_name,faculty,email,major,password,semester)
+		values(@first_name,@last_name,@faculty,@email,@major,@password,@Semester)
+	Select @StudentID = MAX(student_id)
+		FROM Student
+GO
+--2.3(B)
+	--Farah and Brolosy
+
+--2.3(C)
+	--Just and Nana
+--2.3(D)
+	--Farah and Brolosy
+
+--2.3(E)
+	--Just and Nana and Farah and Brolosy
+--2.3(F)
+	--Just and Nana
+--2.3(G)
+	--Farah and Brolosy
+
+--2.3(H)
+	--Just and Nana
+--2.3(I)
+	--Farah and Brolosy
+
+--2.3(J)
+	--Just and Nana
+--2.3(K)
+	--Just and Nana and Farah and Brolosy
+

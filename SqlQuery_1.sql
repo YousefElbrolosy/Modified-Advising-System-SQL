@@ -1,6 +1,8 @@
-﻿CREATE DATABASE Advising_Team_61;
-
+﻿--2.1 (1)
+CREATE DATABASE Advising_Team_61;
 Go
+
+--2.1 (2)
 Create Proc CreateAllTables 
 	As
 	Create Table Advisor(
@@ -143,6 +145,7 @@ Create Proc CreateAllTables
 	);
 GO
 ------------------------------------------------------------------------------------
+--2.1 (3)
 Create PROC DropAllTables
 	As
 	Drop table Student_instructor_course_take
@@ -165,6 +168,7 @@ Create PROC DropAllTables
 	Drop table Advisor
 GO
 ---------------------------------------------------------------------------------------
+--2.1 (4)
 CREATE PROCEDURE clearAllTables
 AS
     TRUNCATE table Student_instructor_course_take
@@ -228,7 +232,6 @@ CREATE view Courses_Slots_Instructor
 		FROM Course c 
 			LEFT JOIN Slot s ON c.course_id = s.course_id
 			INNER JOIN Instructor I ON I.instructor_id = s.instructor_id
-
 GO
 
 --2.2 (F)
@@ -247,3 +250,7 @@ CREATE VIEW Students_Courses_transcript
 			  c.course_id=r.course_id AND
 			  i.instructor_id=r.instructor_id
 GO
+
+--BROLOSY PART HERE
+---------------------------------------------------------------------------------------
+--2.3 (A)

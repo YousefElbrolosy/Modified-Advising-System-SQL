@@ -201,7 +201,7 @@ CREATE View view_Students
 
 GO
 --2.2 (B)
-CREATE view  view_Course_prerequisites
+CREATE view view_Course_prerequisites
 	AS
 	SELECT c.*,pre.prerequisite_course_id
 		FROM Course c
@@ -253,6 +253,27 @@ CREATE VIEW Students_Courses_transcript
 GO
 
 --BROLOSY PART HERE
+--2.2 (H)
+
+CREATE VIEW Semster_offered_Courses
+	AS
+	SELECT c.course_id, c.name AS 'course_name', s.semester_code
+	FROM Semester s LEFT JOIN Course_Semester cs 
+	ON s.semester_code = cs.semester_code
+	LEFT JOIN Course c
+	ON cs.course_id = c.course_id
+
+GO
+
+--2.2 (I)
+-- advisor_id is included in g.*	
+CREATE VIEW Advisors_Graduation_Plan
+	AS
+	SELECT g.*, a.name AS 'advisor_name'
+	FROM Graduation_Plan g , Advisor a
+	WHERE g.advisor_id = a.advisor_id
+
+GO
 ---------------------------------------------------------------------------------------
 --2.3 (A) MAKE SURE OF NULL VALUES AND FINANCIAL STATUS
 CREATE PROC Procedures_StudentRegistration

@@ -231,6 +231,19 @@ CREATE view Courses_Slots_Instructor
 
 GO
 
-------------
---Helloo guyss againnn
---HELLO JUST
+--2.2 (F)
+CREATE VIEW Courses_MakeupExams
+	AS
+	SELECT c.name, c.semester, m.*
+		FROM Course c LEFT OUTER JOIN MakeUp_Exam m ON c.course_id = m.course_id
+GO
+
+--2.2 (G)
+CREATE VIEW Students_Courses_transcript
+	AS
+	SELECT s.student_id,s.f_name + s.l_name AS 'student name',c.course_id,c.name AS 'course name',r.exam_type,r.grade,r.semester_code,i.name AS 'instructor name'
+		FROM Student s, Course c, Instructor i, Student_Instructor_Course_Take r
+		WHERE s.student_id=r.student_id AND
+			  c.course_id=r.course_id AND
+			  i.instructor_id=r.instructor_id
+GO

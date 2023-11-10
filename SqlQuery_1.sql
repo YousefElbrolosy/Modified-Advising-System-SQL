@@ -230,3 +230,6 @@ CREATE view Courses_Slots_Instructor
 			INNER JOIN Instructor I ON I.instructor_id = s.instructor_id
 
 GO
+
+------------
+Helloo guyss

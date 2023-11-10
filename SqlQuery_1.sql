@@ -16,7 +16,7 @@ Create Proc CreateAllTables
 		student_id int Primary key IDENTITY,
 		f_name varchar(40) NOT NULL,
 		l_name varchar(40) NOT NULL,
-		gpa decimal(3,2) NOT NULL,
+		gpa decimal(3,2), -- GPA NULL
 		faculty varchar(40) NOT NULL,
 		email varchar(40) NOT NULL,
 		major varchar(40) NOT NULL,

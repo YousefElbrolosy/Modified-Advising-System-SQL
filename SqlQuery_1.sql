@@ -23,9 +23,10 @@ Create Proc CreateAllTables
 		password varchar(40) NOT NULL,
 		financial_status BIT DEFAULT 1, -- DA SA7??
 		semester int NOT NULL,
-		acquired_hours int NOT NULL,
-		assigned_hours int NOT NULL,
-		advisor_id int Foreign Key references Advisor NOT NULL -- or????
+		acquired_hours int,-- NULL OR NOT NULL????
+		assigned_hours int,-- NULL OR NOT NULL????
+		advisor_id int Foreign Key references Advisor, -- NULL OR NOT NULL????
+		CHECK (gpa BETWEEN 0.7 AND 5)
 	);
 	Create Table Student_Phone (
 		student_id int Foreign Key references Student, 

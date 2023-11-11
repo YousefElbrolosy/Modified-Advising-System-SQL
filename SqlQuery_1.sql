@@ -308,7 +308,15 @@ GO
 	--Farah and Brolosy
 
 --2.3(H)
-	--Just and Nana
+	CREATE PROC Procedures_AdminLinkInstructor
+		@InstructorId int, 
+		@courseId int, 
+		@slotID int
+		As	
+			UPDATE Slot
+				Set instructor_id = @InstructorId,course_id = @courseId
+				Where slot_id = @slotID
+	GO
 --2.3(I)
 	--Farah and Brolosy
 

@@ -290,7 +290,6 @@ CREATE PROC Procedures_StudentRegistration
 GO
 --2.3(B)
 	--Farah and Brolosy
-
 --2.3(C) TOO SIMPLE??
 CREATE PROC Procedures_AdminListStudents
 	As
@@ -299,22 +298,20 @@ CREATE PROC Procedures_AdminListStudents
 GO
 --2.3(D)
 	--Farah and Brolosy
-
 --2.3(E)
-	--Just and Nana and Farah and Brolosy
+	
 --2.3(F)
-create Procedure AdminAddingSemester
-@start_date date,
-@end_date date,
-@semester_code VARCHAR(40)
-AS
-insert into Semester
-VALUES(@semester_code,@start_date,@end_date)
+Create Procedure AdminAddingSemester
+	@start_date date,
+	@end_date date,
+	@semester_code VARCHAR(40)
+	AS
+		Insert Into Semester
+			VALUES(@semester_code,@start_date,@end_date)
 
 GO
 --2.3(G)
 	--Farah and Brolosy
-
 --2.3(H)
 	CREATE PROC Procedures_AdminLinkInstructor
 		@InstructorId int, 
@@ -327,19 +324,20 @@ GO
 	GO
 --2.3(I)
 	--Farah and Brolosy
-
 --2.3(J)
 Create PROCEDURE Procedures_AdminLinkStudentToAdvisor
-@studentID int,
-@advisorId int
-
-AS
-update Student 
-set advisor_id = @advisorID
-WHERE student_id = @studentID
-
+	@studentID int,
+	@advisorId int
+	AS
+	Update Student 
+		Set advisor_id = @advisorID
+		WHERE student_id = @studentID
 GO
-
 --2.3(K)
-	--Just and Nana and Farah and Brolosy
-
+Create PROC Procedures_AdminAddExam
+	@Type varchar (40),
+	@date datetime, 
+	@courseID int
+	As
+		INSERT INTO MakeUp_Exam (date,type,course_id)
+			VALUES(@date,@Type,@courseID)

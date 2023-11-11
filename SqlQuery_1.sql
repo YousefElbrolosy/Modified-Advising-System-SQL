@@ -301,7 +301,14 @@ GO
 	--Farah and Brolosy
 
 --2.3(E)
-	--Just and Nana and Farah and Brolosy
+	Create PROC AdminListStudentsWithAdvisors
+	AS
+	SELECT s.f_name,s.l_name,A.name --should i get all info wla names bs?
+	from Student s 	LEFT Join Advisor A --should i get all students with left outer join wla inner 3ashan 2al with their advisor so he is expecting an advisor not a null value?
+		 ON a.advisor_id = A.advisor_id
+	
+	GO
+
 --2.3(F)
 create Procedure AdminAddingSemester
 @start_date date,

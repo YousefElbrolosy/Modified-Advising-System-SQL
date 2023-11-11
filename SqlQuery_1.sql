@@ -321,7 +321,17 @@ GO
 	--Farah and Brolosy
 
 --2.3(J)
-	--Just and Nana
+Create PROCEDURE Procedures_AdminLinkStudentToAdvisor
+@studentID int,
+@advisorId int
+
+AS
+update Student 
+set advisor_id = @advisorID
+WHERE student_id = @studentID
+
+GO
+
 --2.3(K)
 	--Just and Nana and Farah and Brolosy
 

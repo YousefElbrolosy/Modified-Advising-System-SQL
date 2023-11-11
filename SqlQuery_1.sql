@@ -258,11 +258,9 @@ GO
 CREATE VIEW Semster_offered_Courses
 	AS
 	SELECT c.course_id, c.name AS 'course_name', s.semester_code
-	FROM Semester s LEFT JOIN Course_Semester cs 
-	ON s.semester_code = cs.semester_code
-	LEFT JOIN Course c
-	ON cs.course_id = c.course_id
-
+		FROM Semester s 
+		LEFT JOIN Course_Semester cs ON s.semester_code = cs.semester_code
+		LEFT JOIN Course c ON cs.course_id = c.course_id
 GO
 
 --2.2 (I)
@@ -270,9 +268,8 @@ GO
 CREATE VIEW Advisors_Graduation_Plan
 	AS
 	SELECT g.*, a.name AS 'advisor_name'
-	FROM Graduation_Plan g , Advisor a
-	WHERE g.advisor_id = a.advisor_id
-
+		FROM Graduation_Plan g , Advisor a
+		WHERE g.advisor_id = a.advisor_id
 GO
 ---------------------------------------------------------------------------------------
 --2.3 (A) MAKE SURE OF NULL VALUES AND FINANCIAL STATUS
@@ -294,8 +291,12 @@ GO
 --2.3(B)
 	--Farah and Brolosy
 
---2.3(C)
-	--Just and Nana
+--2.3(C) TOO SIMPLE??
+CREATE PROC Procedures_AdminListStudents
+	As
+	Select *
+		From Student
+GO
 --2.3(D)
 	--Farah and Brolosy
 

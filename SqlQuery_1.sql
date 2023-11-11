@@ -303,7 +303,15 @@ GO
 --2.3(E)
 	--Just and Nana and Farah and Brolosy
 --2.3(F)
-	--Just and Nana
+create Procedure AdminAddingSemester
+@start_date date,
+@end_date date,
+@semester_code VARCHAR(40)
+AS
+insert into Semester
+VALUES(@semester_code,@start_date,@end_date)
+
+GO
 --2.3(G)
 	--Farah and Brolosy
 

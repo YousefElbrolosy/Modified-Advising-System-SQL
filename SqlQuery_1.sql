@@ -219,7 +219,7 @@ GO
 --2.2 (D)
 CREATE view Student_Payment
 	AS 
-	SELECT P.*,s.name
+	SELECT P.*,s.f_name,s.l_name
 		FROM Payment P 
 			INNER JOIN Student s ON P.student_id = s.student_id
 			--INNER JOIN Installment I ON P.payment_id = I.payment_id

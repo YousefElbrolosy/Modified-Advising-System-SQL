@@ -1,6 +1,4 @@
-﻿--2.1 (1)
-CREATE DATABASE Advising_Team_61;
-Go
+﻿
 
 --2.1 (2)
 Create Proc CreateAllTables 
@@ -23,8 +21,8 @@ Create Proc CreateAllTables
 		password varchar(40) NOT NULL,
 		financial_status BIT DEFAULT 1, -- DA SA7??
 		semester int NOT NULL,
-		acquired_hours int,-- NULL OR NOT NULL????
-		assigned_hours int,-- NULL OR NOT NULL????
+		acquired_hours int,-- NULL OR NOT NULL???? They are not stated in the milestone
+		assigned_hours int,-- NULL OR NOT NULL????  They are not stated in the milestone
 		advisor_id int Foreign Key references Advisor, -- NULL OR NOT NULL????
 		CHECK (gpa BETWEEN 0.7 AND 5)
 	);
@@ -103,7 +101,7 @@ Create Proc CreateAllTables
 		PRIMARY KEY(plan_id, semester_code, course_id),
 		FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
 	);
-	Create Table Request (    -- NOT NULL
+	Create Table Request (-- NOT NULL
 		request_id int PRIMARY KEY, 
 		type varchar(40) NOT NULL, 
 		comment varchar(40), 
@@ -111,7 +109,8 @@ Create Proc CreateAllTables
 		credit_hours int, 
 		student_id int FOREIGN KEY references Student NOT NULL, 
 		advisor_id int FOREIGN KEY references Advisor NOT NULL, 
-		course_id int
+		course_id int,
+		CHECK(status in ('pending','accepted','rejected'))
 	);
 	Create Table MakeUp_Exam (
 		exam_id int PRIMARY KEY IDENTITY, 
@@ -450,7 +449,3 @@ CREATE PROCEDURE Procedures_AdminAddExam
 	INSERT INTO MakeUp_Exam(date, type, course_id)
 	VALUES(@date,@type,@course_id)
 GO
-
-
-
---Farouha

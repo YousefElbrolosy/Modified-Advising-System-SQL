@@ -27,6 +27,7 @@ Create Proc CreateAllTables
 		assigned_hours int,-- NULL OR NOT NULL????
 		advisor_id int Foreign Key references Advisor, -- NULL OR NOT NULL????
 		CHECK (gpa BETWEEN 0.7 AND 5)
+		CHECK ()
 	);
 	Create Table Student_Phone (
 		student_id int Foreign Key references Student, 
@@ -111,7 +112,8 @@ Create Proc CreateAllTables
 		credit_hours int, 
 		student_id int FOREIGN KEY references Student NOT NULL, 
 		advisor_id int FOREIGN KEY references Advisor NOT NULL, 
-		course_id int
+		course_id int,
+		CHECK(status in ('accepted','pending','rejected'))
 	);
 	Create Table MakeUp_Exam (
 		exam_id int PRIMARY KEY IDENTITY, 

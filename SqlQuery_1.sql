@@ -290,6 +290,22 @@ CREATE PROC Procedures_StudentRegistration
 GO
 --2.3(B)
 	--Farah and Brolosy
+	-- Brolosy
+CREATE PROCEDURE Procedures_AdvisorRegistration
+	@advisor_name varchar(40),
+	@password varchar(40),
+	@email varchar(40),
+	@office varchar(40),
+	@advisor_id int	OUTPUT
+	AS 
+	INSERT INTO Advisor(name, email, office, password)
+	VALUES(@advisor_name, @email, @office, @password)
+	SELECT @advisor_id = MAX(advisor.advisor_id)
+	From Advisor advisor
+
+-- Are we sure that this will select after the column is added?
+-- Or should we select last
+GO
 --2.3(C) TOO SIMPLE??
 CREATE PROC Procedures_AdminListStudents
 	As
@@ -298,6 +314,14 @@ CREATE PROC Procedures_AdminListStudents
 GO
 --2.3(D)
 	--Farah and Brolosy
+CREATE PROCEDURE Procedures_AdminListAdvisors
+	AS 
+	SELECT * 
+	FROM Advisor
+	-- does he want names? or all data
+GO
+
+
 --2.3(E)
 	Create PROC AdminListStudentsWithAdvisors
 	AS
@@ -305,6 +329,19 @@ GO
 		From Student s 	LEFT Join Advisor A --should i get all students with left outer join wla inner 3ashan 2al with their advisor so he is expecting an advisor not a null value?
 		 ON a.advisor_id = A.advisor_id
 	GO
+
+-- 2.3(E)
+-- Brolosy
+CREATE PROCEDURE AdminListStudentsWithAdvisors
+	AS
+	SELECT * 
+	-- I THINK LEFT OUTER JOIN HERE IS TRIVIAL BECAUSE THERE WONT
+	--BE ANY REGISTERED STUDENTS WITH NO ADVISORS
+	FROM Student s LEFT OUTER JOIN Advisor a
+	ON s.advisor_id = a.advisor_id
+
+	GO
+
 --2.3(F)
 Create Procedure AdminAddingSemester
 	@start_date date,
@@ -316,6 +353,18 @@ Create Procedure AdminAddingSemester
 GO
 --2.3(G)
 	--Farah and Brolosy
+CREATE PROCEDURE Procedures_AdminAddingCourse
+	@major varchar(40),
+	@semester int,
+	@credit_hours int,
+	@course_name varchar(40),
+	@offered bit
+	AS
+	INSERT INTO Course(name, major, is_offered, credit_hours, semester)
+	VALUES(@course_name, @major, @offered, @credit_hours, @semester)
+
+GO
+
 --2.3(H)
 	CREATE PROC Procedures_AdminLinkInstructor
 		@InstructorId int, 
@@ -328,6 +377,40 @@ GO
 	GO
 --2.3(I)
 	--Farah and Brolosy
+CREATE PROCEDURE Procedures_AdminLinkStudent
+	@instructor_id int,
+	@student_id int,
+	@course_id int,
+	@semester_code varchar(40)
+	AS
+	-- I think I first need to make sure that the inputs are in fact in the other tables
+	-- Also need to check if they aren't already existing in the relation take table
+	-- in just/nanna implementation of H they are considering that the record of student is already there 
+	-- with null values for the rest?
+	-- why?
+	/*
+	**INSERT INTO Student_Instructor_Course_Take(student_id, course_id, instructor_id, semester_code)
+	**VALUES(@student_id, @course_id, @instructor_id, @semester_code)
+	*/
+/*
+	**SELECT i.instructor_id, s.student_id, c.course_id
+	**FROM Instructor i, Student s, Course c
+	**WHERE i.instructor_id = @instructor_id AND 
+	**	  s.student_id = @student_id AND
+	**	  c.course_id = @course_id 
+
+*/
+	-- WHY NOT JUST INSERT?
+	UPDATE Student_Instructor_Course_Take
+		SET course_id = @course_id, semester_code = @semester_code , student_id = @student_id
+		WHERE instructor_id = @instructor_id
+
+	-- DOESNT THAT MEAN THAT THERE THERE ARE MULTIPLE ROWS OF INSTRUCTORS WITH THE SAME ID
+	-- SO IF WE CHANGE ONE ALL ELSE CHANGE?
+		
+	-- and what if there already existing students in that row
+
+GO
 --2.3(J)
 Create PROCEDURE Procedures_AdminLinkStudentToAdvisor
 	@studentID int,
@@ -345,3 +428,25 @@ Create PROC Procedures_AdminAddExam
 	As
 		INSERT INTO MakeUp_Exam (date,type,course_id)
 			VALUES(@date,@Type,@courseID)
+
+GO
+--2.3(J) Brolosy
+CREATE PROCEDURE Procedures_AdminLinkStudentToAdvisor
+	@student_id int,
+	@advisor_id int
+	AS
+	UPDATE Student
+	SET advisor_id = @advisor_id 
+	WHERE student_id = @student_id
+	-- I think here update is okay because student_id is unique
+GO
+
+--2.3(K) Brolosy
+CREATE PROCEDURE Procedures_AdminAddExam
+	@type varchar(40),
+	@date datetime,
+	@course_id int
+	AS 
+	INSERT INTO MakeUp_Exam(date, type, course_id)
+	VALUES(@date,@type,@course_id)
+GO

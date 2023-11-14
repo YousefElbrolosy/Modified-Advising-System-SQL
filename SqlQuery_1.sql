@@ -1,5 +1,6 @@
-﻿
-
+﻿--2.1 (1)
+CREATE DATABASE Advising_Team_61;
+Go
 --2.1 (2)
 Create Proc CreateAllTables 
 	As
@@ -21,11 +22,10 @@ Create Proc CreateAllTables
 		password varchar(40) NOT NULL,
 		financial_status BIT DEFAULT 1, -- DA SA7??
 		semester int NOT NULL,
-		acquired_hours int,-- NULL OR NOT NULL???? They are not stated in the milestone
-		assigned_hours int,-- NULL OR NOT NULL????  They are not stated in the milestone
+		acquired_hours int,-- NULL OR NOT NULL????
+		assigned_hours int,-- NULL OR NOT NULL????
 		advisor_id int Foreign Key references Advisor, -- NULL OR NOT NULL????
 		CHECK (gpa BETWEEN 0.7 AND 5)
-		CHECK ()
 	);
 	Create Table Student_Phone (
 		student_id int Foreign Key references Student, 
@@ -64,8 +64,9 @@ Create Proc CreateAllTables
 		instructor_id int Foreign Key references Instructor, 
 		semester_code varchar(40) NOT NULL, 
 		exam_type varchar(40) DEFAULT 'Normal', 
-		grade varchar(40) --A,B,C or %
-		Primary Key(student_id,course_id,instructor_id)
+		grade varchar(40), --A,B,C or %
+		Primary Key(student_id,course_id,instructor_id),
+		CHECK (exam_type IN('Normal','First_makeup','Second_makeup'))	
 	);
 	Create Table Semester (
 		semester_code varchar(40) PRIMARY KEY, 
@@ -82,7 +83,9 @@ Create Proc CreateAllTables
 		day varchar(40) NOT NULL, 
 		time varchar(40) NOT NULL, 
 		location varchar(40) NOT NULL, 
-		course_id int Foreign Key references Course, 
+		course_id int Foreign Key references Course
+		ON UPDATE CASCADE
+		ON DELETE CASCADE, 
 		instructor_id int Foreign Key references Instructor
 	);
 	
@@ -102,7 +105,7 @@ Create Proc CreateAllTables
 		PRIMARY KEY(plan_id, semester_code, course_id),
 		FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
 	);
-	Create Table Request (-- NOT NULL
+	Create Table Request (    -- NOT NULL
 		request_id int PRIMARY KEY, 
 		type varchar(40) NOT NULL, 
 		comment varchar(40), 
@@ -111,13 +114,14 @@ Create Proc CreateAllTables
 		student_id int FOREIGN KEY references Student NOT NULL, 
 		advisor_id int FOREIGN KEY references Advisor NOT NULL, 
 		course_id int,
-		CHECK(status in ('accepted','pending','rejected'))
+		CHECK (status IN ('pending','accepted','rejected'))
 	);
 	Create Table MakeUp_Exam (
 		exam_id int PRIMARY KEY IDENTITY, 
 		date DATETIME NOT NULL, 
 		type varchar(40) NOT NULL, 
-		course_id int FOREIGN KEY references Course NOT NULL
+		course_id int FOREIGN KEY references Course NOT NULL,
+		CHECK(type in('First_makeup','Second_makeup'))
 	);
 	Create Table Exam_Student (
 		exam_id int FOREIGN KEY references MakeUp_Exam, 
@@ -128,23 +132,23 @@ Create Proc CreateAllTables
 	Create Table Payment(
 		payment_id int PRIMARY KEY, 
 		amount int NOT NULL, -- decimal or int
-		deadline DATE NOT NULL, 
-		n_installments int NOT NULL, --as MONTH(deadline) - MONTH(start_date) 
+		deadline DATETIME NOT NULL, 
+		n_installments as CASE WHEN (year(deadline)=year(start_date)) THEN (MONTH(deadline) - MONTH(start_date)) ELSE ((12-MONTH(start_date))+MONTH(deadline)) END, 
 		status varchar(40) DEFAULT 'notPaid', 
 		fund_percentage decimal(5,2) NOT NULL, 
 		student_id int FOREIGN KEY references Student NOT NULL, 
 		semester_code varchar(40) references Semester NOT NULL, 
-		start_date DATE NOT NULL
+		start_date DATETIME NOT NULL,
+		CHECK(status IN ('notPaid','Paid'))
 	);
 	Create Table Installment (
 		payment_id int FOREIGN KEY references Payment, 
-		deadline int, --as start_date + Month(0000/01/00, 
+		deadline DATETIME, --as start_date + Month(0000/01/00, 
 		amount int NOT NULL, -- int?? 
 		status varchar(40) DEFAULT 'notPaid', -- not Paid or not NULL 
-		start_date DATE NOT NULL,
+		start_date DATETIME NOT NULL,
 		PRIMARY KEY(payment_id,deadline)
 	);
-
 GO
 ------------------------------------------------------------------------------------
 --2.1 (3)
@@ -384,33 +388,8 @@ CREATE PROCEDURE Procedures_AdminLinkStudent
 	@course_id int,
 	@semester_code varchar(40)
 	AS
-	-- I think I first need to make sure that the inputs are in fact in the other tables
-	-- Also need to check if they aren't already existing in the relation take table
-	-- in just/nanna implementation of H they are considering that the record of student is already there 
-	-- with null values for the rest?
-	-- why?
-	/*
-	**INSERT INTO Student_Instructor_Course_Take(student_id, course_id, instructor_id, semester_code)
-	**VALUES(@student_id, @course_id, @instructor_id, @semester_code)
-	*/
-/*
-	**SELECT i.instructor_id, s.student_id, c.course_id
-	**FROM Instructor i, Student s, Course c
-	**WHERE i.instructor_id = @instructor_id AND 
-	**	  s.student_id = @student_id AND
-	**	  c.course_id = @course_id 
-
-*/
-	-- WHY NOT JUST INSERT?
-	UPDATE Student_Instructor_Course_Take
-		SET course_id = @course_id, semester_code = @semester_code , student_id = @student_id
-		WHERE instructor_id = @instructor_id
-
-	-- DOESNT THAT MEAN THAT THERE THERE ARE MULTIPLE ROWS OF INSTRUCTORS WITH THE SAME ID
-	-- SO IF WE CHANGE ONE ALL ELSE CHANGE?
-		
-	-- and what if there already existing students in that row
-
+	INSERT INTO Student_Instructor_Course_Take(student_id, course_id, instructor_id, semester_code)
+	VALUES(@student_id, @course_id, @instructor_id, @semester_code)
 GO
 --2.3(J)
 Create PROCEDURE Procedures_AdminLinkStudentToAdvisor
@@ -451,3 +430,53 @@ CREATE PROCEDURE Procedures_AdminAddExam
 	INSERT INTO MakeUp_Exam(date, type, course_id)
 	VALUES(@date,@type,@course_id)
 GO
+
+--2.3(I)
+CREATE PROC Procedures_AdminIssueInstallment
+	@payment_ID int
+	AS
+	DECLARE @n int
+	DECLARE @start_date date
+	DECLARE @amount int
+	DECLARE @deadline date
+
+	SELECT @n=n_installments ,@amount=amount/n_installments, @start_date=start_date
+	FROM Payment
+	WHERE payment_id=@payment_ID
+
+	WHILE @n>0
+		BEGIN
+			SELECT @deadline=DATEADD(month, 1, @start_date)
+			INSERT INTO Installment(payment_id,deadline,amount,start_date)
+			VALUES (@payment_ID,@deadline,@amount,@start_date)
+			SET @start_date = @deadline
+			SET @n= @n-1
+		END
+GO
+--2.3(M)
+CREATE PROC Procedures_AdminDeleteCourse
+	@courseID int
+	AS
+	DELETE FROM Course
+	WHERE course_id=@courseID
+
+GO
+--2.3(N)
+CREATE PROC  Procedure_AdminUpdateStudentStatus
+	@StudentID int
+	AS
+	UPDATE Student
+	SET financial_status =
+				CASE WHEN ('NotPaid' IN (
+								SELECT DISTINCT status
+								FROM Installment i
+								WHERE (
+									(i.payment_id IN (SELECT payment_id
+									FROM Payment
+									WHERE student_id=@StudentID) AND CURRENT_TIMESTAMP > i.deadline
+								)))) THEN 0 ELSE 1 END;
+				
+	)
+	WHERE 
+
+--Farahh

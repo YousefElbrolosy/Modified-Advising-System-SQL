@@ -144,6 +144,7 @@ Create Proc CreateAllTables
 		start_date DATE NOT NULL,
 		PRIMARY KEY(payment_id,deadline)
 	);
+
 GO
 ------------------------------------------------------------------------------------
 --2.1 (3)

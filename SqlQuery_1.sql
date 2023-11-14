@@ -25,6 +25,7 @@ Create Proc CreateAllTables
 		assigned_hours int,-- NULL OR NOT NULL????  They are not stated in the milestone
 		advisor_id int Foreign Key references Advisor, -- NULL OR NOT NULL????
 		CHECK (gpa BETWEEN 0.7 AND 5)
+		CHECK ()
 	);
 	Create Table Student_Phone (
 		student_id int Foreign Key references Student, 
@@ -110,7 +111,7 @@ Create Proc CreateAllTables
 		student_id int FOREIGN KEY references Student NOT NULL, 
 		advisor_id int FOREIGN KEY references Advisor NOT NULL, 
 		course_id int,
-		CHECK(status in ('pending','accepted','rejected'))
+		CHECK(status in ('accepted','pending','rejected'))
 	);
 	Create Table MakeUp_Exam (
 		exam_id int PRIMARY KEY IDENTITY, 
@@ -143,6 +144,7 @@ Create Proc CreateAllTables
 		start_date DATE NOT NULL,
 		PRIMARY KEY(payment_id,deadline)
 	);
+
 GO
 ------------------------------------------------------------------------------------
 --2.1 (3)

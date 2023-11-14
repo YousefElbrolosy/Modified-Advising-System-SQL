@@ -451,3 +451,7 @@ CREATE PROCEDURE Procedures_AdminAddExam
 	INSERT INTO MakeUp_Exam(date, type, course_id)
 	VALUES(@date,@type,@course_id)
 GO
+
+
+
+--Farouha

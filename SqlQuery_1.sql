@@ -467,16 +467,15 @@ CREATE PROC  Procedure_AdminUpdateStudentStatus
 	AS
 	UPDATE Student
 	SET financial_status =
-				CASE WHEN ('NotPaid' IN (
-								SELECT DISTINCT status
+				CASE WHEN (NOT EXISTS (
+								SELECT *
 								FROM Installment i
 								WHERE (
 									(i.payment_id IN (SELECT payment_id
 									FROM Payment
-									WHERE student_id=@StudentID) AND CURRENT_TIMESTAMP > i.deadline
-								)))) THEN 0 ELSE 1 END;
+									WHERE student_id=@StudentID) AND CURRENT_TIMESTAMP > i.deadline AND i.status='notPaid'
+								)))) THEN 0 ELSE 1 END
 				
-	)
-	WHERE 
+	WHERE student_id=@StudentID
 
 --Farahh

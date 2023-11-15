@@ -23,7 +23,7 @@ Create Proc CreateAllTables
 		financial_status BIT DEFAULT 1, -- DA SA7??
 		semester int NOT NULL,
 		acquired_hours int,-- NULL OR NOT NULL????
-		assigned_hours int,-- NULL OR NOT NULL???? NOT NULL Ashan mawgouda f M1
+		assigned_hours int,-- NULL OR NOT NULL???? NULL Ashan mawgouda f M1
 		advisor_id int Foreign Key references Advisor, -- NULL OR NOT NULL????
 		CHECK (gpa BETWEEN 0.7 AND 5)
 	);

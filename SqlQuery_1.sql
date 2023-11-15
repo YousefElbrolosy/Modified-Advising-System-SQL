@@ -23,7 +23,7 @@ Create Proc CreateAllTables
 		financial_status BIT DEFAULT 1, -- DA SA7??
 		semester int NOT NULL,
 		acquired_hours int,-- NULL OR NOT NULL????
-		assigned_hours int,-- NULL OR NOT NULL????
+		assigned_hours int,-- NULL OR NOT NULL???? NOT NULL Ashan mawgouda f M1
 		advisor_id int Foreign Key references Advisor, -- NULL OR NOT NULL????
 		CHECK (gpa BETWEEN 0.7 AND 5)
 	);
@@ -90,7 +90,7 @@ Create Proc CreateAllTables
 	);
 	
 	Create Table Graduation_Plan (
-		plan_id int, 
+		plan_id int IDENTITY, 
 		semester_code varchar(40), 
 		semester_credit_hours int NOT NULL,
 		expected_grad_semester int NOT NULL, --sem or sem code
@@ -143,11 +143,13 @@ Create Proc CreateAllTables
 	);
 	Create Table Installment (
 		payment_id int FOREIGN KEY references Payment, 
-		deadline DATETIME, --as start_date + Month(0000/01/00, 
+		deadline AS DATEADD(month, 1, start_date),
 		amount int NOT NULL, -- int?? 
 		status varchar(40) DEFAULT 'notPaid', -- not Paid or not NULL 
 		start_date DATETIME NOT NULL,
-		PRIMARY KEY(payment_id,deadline)
+		PRIMARY KEY(payment_id,deadline),
+		CHECK(status IN ('notPaid','Paid'))
+
 	);
 GO
 ------------------------------------------------------------------------------------
@@ -257,9 +259,7 @@ CREATE VIEW Students_Courses_transcript
 			  i.instructor_id=r.instructor_id
 GO
 
---BROLOSY PART HERE
 --2.2 (H)
-
 CREATE VIEW Semster_offered_Courses
 	AS
 	SELECT c.course_id, c.name AS 'course_name', s.semester_code
@@ -269,7 +269,8 @@ CREATE VIEW Semster_offered_Courses
 GO
 
 --2.2 (I)
--- advisor_id is included in g.*	
+-- advisor_id is included in g.*
+-- do I need student_ID or no?		
 CREATE VIEW Advisors_Graduation_Plan
 	AS
 	SELECT g.*, a.name AS 'advisor_name'
@@ -305,11 +306,10 @@ CREATE PROCEDURE Procedures_AdvisorRegistration
 	AS 
 	INSERT INTO Advisor(name, email, office, password)
 	VALUES(@advisor_name, @email, @office, @password)
-	SELECT @advisor_id = MAX(advisor.advisor_id)
-	From Advisor advisor
+	SELECT @advisor_id = MAX(advisor_id)
+	From Advisor 
 
--- Are we sure that this will select after the column is added?
--- Or should we select last
+-- Are we sure that this will select after the column is added? Yes these statements are excuted sequentially
 GO
 --2.3(C) TOO SIMPLE??
 CREATE PROC Procedures_AdminListStudents
@@ -330,8 +330,8 @@ GO
 --2.3(E)
 	Create PROC AdminListStudentsWithAdvisors
 	AS
-		SELECT s.f_name,s.l_name,A.name --should i get all info wla names bs?
-		From Student s 	LEFT Join Advisor A --should i get all students with left outer join wla inner 3ashan 2al with their advisor so he is expecting an advisor not a null value?
+		SELECT s.f_name+' '+s.l_name AS student_name ,A.name as advisor_name--should i get all info wla names bs?
+		From Student s INNER JOIN Advisor A --should i get all students with left outer join wla inner 3ashan 2al with their advisor so he is expecting an advisor not a null value?
 		 ON a.advisor_id = A.advisor_id
 	GO
 
@@ -431,14 +431,13 @@ CREATE PROCEDURE Procedures_AdminAddExam
 	VALUES(@date,@type,@course_id)
 GO
 
---2.3(I)
+--2.3(L)
 CREATE PROC Procedures_AdminIssueInstallment
 	@payment_ID int
 	AS
 	DECLARE @n int
 	DECLARE @start_date date
 	DECLARE @amount int
-	DECLARE @deadline date
 
 	SELECT @n=n_installments ,@amount=amount/n_installments, @start_date=start_date
 	FROM Payment
@@ -446,10 +445,9 @@ CREATE PROC Procedures_AdminIssueInstallment
 
 	WHILE @n>0
 		BEGIN
-			SELECT @deadline=DATEADD(month, 1, @start_date)
-			INSERT INTO Installment(payment_id,deadline,amount,start_date)
-			VALUES (@payment_ID,@deadline,@amount,@start_date)
-			SET @start_date = @deadline
+			INSERT INTO Installment(payment_id,amount,start_date)
+			VALUES (@payment_ID,@amount,@start_date)
+			SET @start_date = DATEADD(month, 1, @start_date)
 			SET @n= @n-1
 		END
 GO
@@ -477,5 +475,106 @@ CREATE PROC  Procedure_AdminUpdateStudentStatus
 								)))) THEN 0 ELSE 1 END
 				
 	WHERE student_id=@StudentID
+GO
+--2.3(O)
+CREATE VIEW all_Pending_Requests
+AS
+SELECT r.request_id,r.type,r.comment,r.credit_hours,r.course_id, s.f_name+' '+s.l_name AS Student_name,a.name
+		FROM Request r INNER JOIN Student s ON r.student_id=s.student_id 
+					   INNER JOIN Advisor a ON r.advisor_id=a.advisor_id
+		WHERE r.status='pending'
+GO
+--2.3(P)
+CREATE PROC Procedures_AdminDeleteSlots
+	@current_semester varchar(40)
+	AS
+	UPDATE Slot
+	SET course_id=NULL,instructor_id=NULL
+	WHERE EXISTS(
+	SELECT *
+	FROM Course_Semester cs INNER JOIN Course ON cs.course_id=c.course_id
+	WHERE c.is_offered=0 AND cs.semester_code=@current_semester AND Slot.course_id=cs.course_id)
+GO
+--2.3(Q)
 
+
+--2.3(R)
+CREATE PROC Procedures_AdvisorCreateGP
+	@Semester_code varchar(40),
+	@expected_graduation_date date,
+	@sem_credit_hours int,
+	@advisor_id int,
+	@student_id int
+	AS
+	DECLARE @expected_grad_semester VARCHAR(40)
+	SELECT @expected_grad_semester=semester_code
+	FROM Semester
+	WHERE @expected_graduation_date BETWEEN start_date AND end_date
+	INSERT INTO Graduation_Plan
+	Values(@Semester_code,@sem_credit_hours,@expected_grad_semester,@advisor_id,@student_id)
+GO
+--2.3(S)
+CREATE PROC Procedures_AdvisorAddCourseGP
+	@student_id int,
+	@Semester_code varchar(40),
+	@course_name varchar(40)
+	AS
+	DECLARE @plan_id INT
+	DECLARE @course_id INT
+	SELECT @plan_id=plan_id
+	FROM Graduation_Plan
+	WHERE student_id=@student_id AND semester_code=@Semester_code
+	SELECT @course_id=course_id
+	FROM Course
+	WHERE name=@course_name
+	INSERT INTO GradPlan_Course
+	VALUES(@plan_id,@Semester_code,@course_id)
+GO
+--2.3(T)
+-- How would I update grad sem whilst I don't have such an attribute in gradPlan
+
+--2.3(U)
+CREATE PROC Procedures_AdvisorDeleteFromGP
+	@studentID int, 
+	@semester_code varchar(40),
+	@course_ID INT
+	AS
+
+	DECLARE @plan_id INT
+	SELECT @plan_id=plan_id
+	FROM Graduation_Plan
+	WHERE student_id=@student_id AND semester_code=@semester_code
+
+	DELETE FROM GradPlan_Course WHERE (plan_id=@plan_id AND semester_code=@semester_code AND course_id=@course_ID)
+GO
+
+--2.3(V)
+--What is the meaning of "assigned hours"? In order to implement the 34 ch threshhold
+
+--2.3(W)
+
+--2.3(X)
+CREATE PROC Procedures_AdvisorViewAssignedStudents
+	@AdvisorID int, 
+	@major varchar(40)
+	AS
+	SELECT s.student_id,s.f_name+' '+s.l_name AS Student_Name,s.major,c.name AS course_name
+	FROM Student s, Student_Instructor_Course_Take r, Course c
+	WHERE s.advisor_id=@AdvisorID AND 
+		  s.major=@major AND 
+		  s.student_id=r.student_id AND 
+		  s.course_id=c.course_id
+GO
+--2.3(Y)
+
+
+
+--2.3(Z)
+CREATE PROC Procedures_AdvisorViewPendingRequests
+	@Advisor_ID int
+	AS 
+	SELECT request_id, type,comment,credit_hours,student_id,course_id ---student_id abayeno or no?
+	FROM request 
+	WHERE advisor_id=@advisor_id AND status='pending'
+GO
 --Farahh

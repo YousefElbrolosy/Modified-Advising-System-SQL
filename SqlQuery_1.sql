@@ -877,34 +877,36 @@ GO
 --2.3(LL)
 CREATE PROC Procedures_ViewRequiredCourses
 @StudentID int, 
-@Current_semester_code Varchar(40)
+@Current_semester_code Varchar(40)--me7tagenha fe eh
 AS
-SELECT c.* --rename column
-FROM Course c INNER JOIN  Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.studentID=@StudentID
-WHERE ( (s.exam_type='Second_makeup' and s.grade in('F','FF','FA')) OR
-		(s.exam_type='First_makeup' and  dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) OR
-		(s.exam_type='Normal' and s.grade='ABS')
+	SELECT c.* --rename column
+	FROM Course c INNER JOIN Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.studentID=@StudentID
+	WHERE  (dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) and s.grade in('F','FF','FA') 
+	
+	UNION
+
+	SELECT c.*
+	FROM Course c , Student s
+	Where c.major = s.major and s.student_id = @StudentID and s.semester>c.semester and not exists( SELECT ce.*
+																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+																				 WHERE ce.course_id = c.course_id
+																				)
 
 
-)
 GO
 --2.3(MM)
 CREATE PROC Procedures_ViewOptionalCourse
 @StudentID int, 
-@Currentsemestercode Varchar(40)
+@Currentsemestercode Varchar(40)--me7tagenha fe eh
 AS
-	DECLARE @plan int
-	SELECT @plan=plan_id
-	FROM Graduation_plan
-	where @StudentID = student_id and @Currentsemestercode = semester_code
-
-	SELECT course_id
-	FROM GradPlan_Course
-	where @plan = plan_id and semester_code = @Currentsemestercode
-	--except(
-	--	exec PROC Procedures_ViewRequiredCourses
-	--)
-
+	
+	SELECT c.*
+	FROM Course c , Student s
+	where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and not exists( SELECT ce.*
+																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+																				 WHERE ce.course_id = c.course_id
+																				)
+GO
 
 --2.3(NN)
 

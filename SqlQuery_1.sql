@@ -1,154 +1,177 @@
-﻿--2.1 (1)
-CREATE DATABASE Advising_Team_61;
+﻿--GENERAL QUESTIONS:
+--1)SOME TABLES DOES NOT HAVE INSERT PROCEDURES (PREQCOURSES , INSTRUCTOR , INSTRUCTOR_COURSE , COURSE_SEMESTER , SLOT , GradPlan_Course)
+--2)WHY IS THERE SOME PROCEDURES THAT CAN BE DONE USING VIEWS
+--3)CAN WE HAVE DERIVED ATTRIBUTES THAT IS NOT STATED IN THE SCHEMA AND VICE VERSA
+--2.1 (1) NO PROBLEMS HERE
+CREATE DATABASE Advising_Team_61
 Go
 --2.1 (2)
+--TODO:
+--1)THINK OF MORE CONSTRAINTS
+--2)THINK OF UPDATE/DELETE OPTIONS IN FOREIGN KEY
 Create Proc CreateAllTables 
 	As
-	Create Table Advisor(
-		advisor_id int PRIMARY KEY IDENTITY, 
-		name varchar(40) NOT NULL, 
-		email varchar(40) NOT NULL, 
-		office varchar(40) NOT NULL, 
-		password varchar(40) NOT NULL
+	--INSERT VALUES IN (2.3-B)
+	Create Table Advisor( --NO PROBLEMS HERE BUT WE CAN THINK OF MORE CONSTRAINTS
+		advisor_id int PRIMARY KEY IDENTITY,--IDENTITY BASED ON (2.3-B) 
+		name varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-B) 
+		email varchar(40) NOT NULL, --NOT NULL BASED ON (2.3-B) // We can add further Constraints 'LIKE (%@%.com)' 
+		office varchar(40) NOT NULL, --NOT NULL BASED ON (2.3-B) 
+		password varchar(40) NOT NULL--NOT NULL BASED ON (2.3-B)
 	);
-	Create Table Student(
-		student_id int Primary key IDENTITY,
-		f_name varchar(40) NOT NULL,
-		l_name varchar(40) NOT NULL,
-		gpa decimal(3,2), -- GPA NULL
-		faculty varchar(40) NOT NULL,
-		email varchar(40) NOT NULL,
-		major varchar(40) NOT NULL,
-		password varchar(40) NOT NULL,
-		financial_status BIT DEFAULT 1, -- DA SA7??
-		semester int NOT NULL,
-		acquired_hours int,-- NULL OR NOT NULL????
-		assigned_hours int,-- NULL OR NOT NULL???? NULL Ashan mawgouda f M1
-		advisor_id int Foreign Key references Advisor, -- NULL OR NOT NULL????
-		CHECK (gpa BETWEEN 0.7 AND 5)
+	--INSERT VALUES IN (2.3-A)
+	Create Table Student(--FINANCIAL STATUS default value or should we make it a derived attribute? // WE CAN ALSO THINK OF MORE CONSTRAINTS
+		student_id int Primary key IDENTITY,--IDENTITY BASED ON (2.3-A)
+		f_name varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-A)
+		l_name varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-A)
+		gpa decimal(3,2), -- GPA NULL BASED ON (2.3-A) // GPA SHOULD WE Assign the decimal size
+		faculty varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-A)
+		email varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-A) // We can add further Constraints 'LIKE (%@%.com)' 
+		major varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-A)
+		password varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-A)
+		financial_status BIT DEFAULT 1,--NULL BASED ON (2.3-A) (or default value?) // SKIP THE DERIVATION IN THE SCHEMA?
+		semester int NOT NULL,--NOT NULL BASED ON (2.3-A)
+		acquired_hours int,--NULL BASED ON (2.3-A)
+		assigned_hours int,--NULL BASED ON (2.3-A) and Ashan mawgouda f M1
+		advisor_id int Foreign Key references Advisor, --NULL BASED ON (2.3-A)
+		CHECK (gpa BETWEEN 0.7 AND 5)--GPA CONSTRAINT BASED ON LOGIC
 	);
-	Create Table Student_Phone (
+	--INSERT VALUES IN (2.3-BB)
+	Create Table Student_Phone (--NO PROBLEMS HERE
 		student_id int Foreign Key references Student, 
 		phone_number varchar(40),
 		Primary Key(student_id,phone_number)
 	);
-
-	Create Table Course (
-		course_id int Primary Key Identity, --INT?? and Identity 
-		name varchar(40) NOT NULL, 
-		major varchar(40) NOT NULL, 
-		is_offered BIT NOT NULL, 
-		credit_hours int NOT NULL, 
-		semester int NOT NULL
-	); 
-	Create Table PreqCourse_course (
+	--INSERT VALUES IN (2.3-G)
+	Create Table Course (--NO PROBLEMS HERE BUT WE CAN THINK OF MORE CONSTRAINTS
+		course_id int Primary Key Identity,--IDENTITY BASED ON (2.3-G)
+		name varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-G)
+		major varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-G) // CONSTRAINTS ON MAJOR ?? CHECK (major in ('ENG',....))
+		is_offered BIT NOT NULL,--NOT NULL BASED ON (2.3-G) 
+		credit_hours int NOT NULL,--NOT NULL BASED ON (2.3-G) // CONSTRAINT ON CREDIT HOURS?? CHECK (credit_hours BETWEEN 1 AND 8)
+		semester int NOT NULL--NOT NULL BASED ON (2.3-G)
+	);
+	--INSERT VALUES IN (NO IDEA)
+	Create Table PreqCourse_course (-- NO PROBLEMS HERE
 		prerequisite_course_id int FOREIGN KEY references Course, 
 		course_id int FOREIGN KEY references Course,
 		Primary Key (prerequisite_course_id, course_id),
-	); 
-	Create Table Instructor (
+	);
+	--INSERT VALUES IN (NO IDEA)
+	Create Table Instructor ( -- NOT NULL BASED ON SIMILARITY BETWEEN INSTRUCTOR ATTRIBUTES AND ADVISOR ATTRIBUTES
 		instructor_id int PRIMARY KEY IDENTITY, 
 		name varchar(40) NOT NULL, 
 		email varchar(40) NOT NULL, 
 		faculty varchar(40) NOT NULL, 
 		office varchar(40) NOT NULL
 	);
-	Create Table Instructor_Course (
+	--INSERT VALUES IN (NO IDEA)
+	Create Table Instructor_Course (--NO PROBLEMS HERE
 		course_id int FOREIGN KEY references Course, 
 		instructor_id int FOREIGN KEY references Instructor,
 		Primary Key (course_id,instructor_id)
-	); 
-	Create Table Student_Instructor_Course_Take (
+	);
+	--INSERT VALUES IN (2.3-I)
+	Create Table Student_Instructor_Course_Take (--NO PROBLEMS HERE
 		student_id int Foreign Key references Student, 
 		course_id int Foreign Key references Course, 
 		instructor_id int Foreign Key references Instructor, 
-		semester_code varchar(40) NOT NULL, 
-		exam_type varchar(40) DEFAULT 'Normal', 
-		grade varchar(40), 
+		semester_code varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-I)
+		exam_type varchar(40) DEFAULT 'Normal',--DEFAULT VALUE BASED ON M2 DESC 
+		grade varchar(40),--NULL BASED ON (2.3-I) 
 		Primary Key(student_id,course_id,instructor_id),
-		CHECK (exam_type IN('Normal','First_makeup','Second_makeup'))	
+		CHECK (exam_type IN('Normal','First_makeup','Second_makeup'))--CONSTRAINT BASED ON M2 DESC	
 	);
-	Create Table Semester (
+	--INSERT VALUES IN (2.3-F)
+	Create Table Semester (--NO PROBLEMS HERE
 		semester_code varchar(40) PRIMARY KEY, 
-		start_date DATE NOT NULL, 
-		end_date DATE NOT NULL
+		start_date DATE NOT NULL,--NOT NULL BASED ON (2.3-F)
+		end_date DATE NOT NULL--NOT NULL BASED ON (2.3-F)
 	);
-	Create Table Course_Semester (
+	--INSERT VALUES IN (NO IDEA)
+	Create Table Course_Semester (--NO PROBLEMS HERE
 		course_id int FOREIGN KEY references Course, 
 		semester_code varchar(40) Foreign Key references Semester,
 		Primary Key(course_id,semester_code)
 	);
-	Create Table Slot (
+	--INSERT VALUES IN (NO IDEA) // INSTRUCTOR/COURSE In (2.3-H)
+	Create Table Slot (--NOT NULLS BASED ON THE ASSUMPTION THAT EVERY SLOT THAT EXISTS IS ALREADY STORED AND YOU JUST UPDATE THE INSTRUCTOR/COURSE THAT IS ASSIGNED TO THIS SLOT // WE CAN THINK OF MORE CONSTRAINTS
 		slot_id int Primary Key, 
-		day varchar(40) NOT NULL, 
-		time varchar(40) NOT NULL, 
+		day varchar(40) NOT NULL,--IN(Sundat,Monday,...) 
+		time varchar(40) NOT NULL,--IN(1st,2nd,3rd,...) 
 		location varchar(40) NOT NULL, 
-		course_id int Foreign Key references Course
+		course_id int Foreign Key references Course-- NULL BASED ON (2.3-H) 
 		ON UPDATE CASCADE
-		ON DELETE CASCADE, 
-		instructor_id int Foreign Key references Instructor
+		ON DELETE CASCADE,
+		instructor_id int Foreign Key references Instructor -- NULL BASED ON (2.3-H)
 	);
-	
-	Create Table Graduation_Plan (
-		plan_id int IDENTITY, 
+	--INSERT VALUES IN (2.3-R)
+	Create Table Graduation_Plan (--NO PROBLEMS HERE
+		plan_id int IDENTITY,--IDENTITY BASED ON (2.3-R) 
 		semester_code varchar(40), 
-		semester_credit_hours int NOT NULL,
-		expected_grad_semester int NOT NULL, --sem or sem code
-		advisor_id int FOREIGN KEY references Advisor NOT NULL, 
-		student_id int FOREIGN KEY references Student NOT NULL,
+		semester_credit_hours int NOT NULL,--NOT NULL BASED ON (2.3-R) 
+		expected_grad_semester varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-R)
+		advisor_id int FOREIGN KEY references Advisor NOT NULL,--NOT NULL BASED ON (2.3-R)
+		student_id int FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON (2.3-R)
 		PRIMARY KEY (plan_id , semester_code)
 	);
-	Create Table GradPlan_Course (
+	--INSERT VALUES IN (NO IDEA) // DELETE VALUES (2.3-U)
+	Create Table GradPlan_Course (--NO PROBLEMS HERE
 		plan_id int, 
 		semester_code varchar(40), 
 		course_id int FOREIGN KEY references Course,
 		PRIMARY KEY(plan_id, semester_code, course_id),
 		FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
 	);
-	Create Table Request (    -- NOT NULL
-		request_id int PRIMARY KEY IDENTITY, 
-		type varchar(40) NOT NULL, 
-		comment varchar(40), 
-		status varchar(40) DEFAULT 'pending', 
-		credit_hours int, 
-		student_id int FOREIGN KEY references Student NOT NULL, 
-		advisor_id int FOREIGN KEY references Advisor NOT NULL, 
-		course_id int,
-		CHECK (status IN ('pending','accepted','rejected'))
+	--INSERT VALUES IN (2.3-DD // 2.3-EE)
+	Create Table Request (--ADVISOR --> NULL/NOT NULL
+		request_id int PRIMARY KEY IDENTITY,--IDENTITY BASED ON (2.3-DD // 2.3-EE)
+		type varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-DD // 2.3-EE)
+		comment varchar(40) NOT NULL,-- NOT NULL BASED ON  (2.3-DD // 2.3-EE)
+		status varchar(40) DEFAULT 'pending',--DEFAULT VALUE BASED ON M2 DESC 
+		credit_hours int,--NULL BASED ON (2.3-DD // 2.3-EE)
+		student_id int FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON  (2.3-DD // 2.3-EE) 
+		advisor_id int FOREIGN KEY references Advisor NOT NULL,--NULL UNTIL ADVISOR RESPONDS? OR PUT THE CURRENT STUDENT'S ADVISOR 
+		course_id int,--NULL BASED ON (2.3-DD // 2.3-EE)
+		CHECK (status IN ('pending','accepted','rejected'))--BASED ON M2 DESC 
 	);
-	Create Table MakeUp_Exam (
-		exam_id int PRIMARY KEY IDENTITY, 
-		date DATETIME NOT NULL, 
-		type varchar(40) NOT NULL, 
-		course_id int FOREIGN KEY references Course NOT NULL,
-		CHECK(type in('First_makeup','Second_makeup'))
+	--INSERT VALUES IN (2.3-K)
+	Create Table MakeUp_Exam (--date datatype
+		exam_id int PRIMARY KEY IDENTITY,--IDENTITY BASED ON (2.3-K)
+		date DATETIME NOT NULL,--DATETIME IN 2.3-K // DATE IN UPDATED SCHEMA // NOT NULL BASED ON (2.3-K) 
+		type varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-K) 
+		course_id int FOREIGN KEY references Course NOT NULL,--NOT NULL BASED ON (2.3-K) 
+		CHECK(type in('First_makeup','Second_makeup'))--BASED ON M2 DESC
 	);
-	Create Table Exam_Student (
+	--INSERT VALUES IN (2.3-II // 2.3-KK)
+	Create Table Exam_Student (--NO PROBLEMS HERE
 		exam_id int FOREIGN KEY references MakeUp_Exam, 
 		student_id int FOREIGN KEY references Student, 
-		course_id int NOT NULL, -- not foreign key leh?? notnull leh??
+		course_id int NOT NULL,--NOT NULL BASED ON (2.3-II // 2.3-KK) 
 		PRIMARY KEY(exam_id,student_id)
 	);
-	Create Table Payment(
+	--INSERT VALUES IN (NO IDEA)
+	Create Table Payment(--NULL/NOT NULL BASED ON NOTHING // DERIVED ATTRIBUTE IS NOT DERIVED IN THE SCHEMA
 		payment_id int PRIMARY KEY, 
-		amount int NOT NULL, -- decimal or int
+		amount int NOT NULL,
 		deadline DATETIME NOT NULL, 
-		n_installments as CASE WHEN (year(deadline)=year(start_date)) THEN (MONTH(deadline) - MONTH(start_date)) ELSE ((12-MONTH(start_date))+MONTH(deadline)) END, 
-		status varchar(40) DEFAULT 'notPaid', 
-		fund_percentage decimal(5,2) NOT NULL, 
+		n_installments as DATEDIFF(month,start_date,deadline), --CASE WHEN (year(deadline)=year(start_date)) THEN (MONTH(deadline) - MONTH(start_date)) ELSE ((12-MONTH(start_date))+MONTH(deadline)) END,--SAME AS DEADLINE COMMENT 
+		status varchar(40) DEFAULT 'notPaid',--DEFAULT VALUE BASED ON M2 DESC 
+		fund_percentage decimal(5,2) NOT NULL,
+		start_date DATETIME NOT NULL,
 		student_id int FOREIGN KEY references Student NOT NULL, 
 		semester_code varchar(40) references Semester NOT NULL, 
-		start_date DATETIME NOT NULL,
-		CHECK(status IN ('notPaid','Paid'))
+		CHECK(status IN ('notPaid','Paid'))--BASED ON M2 DESC
 	);
+	--INSERT VALUES IN (2.3-L)
 	Create Table Installment (
 		payment_id int FOREIGN KEY references Payment, 
-		deadline AS DATEADD(month, 1, start_date),
-		amount int NOT NULL, -- int?? 
-		status varchar(40) DEFAULT 'notPaid', -- not Paid or not NULL 
+		deadline AS DATEADD(month, 1, start_date),--JUST COMMENT: heya sa7 bas it is not explicitly stated fel schema fa can we assume enaha derived?
+		amount int NOT NULL,
+		status varchar(40) DEFAULT 'notPaid', --DEFAULT VALUE BASED ON M2 DESC 
 		start_date DATETIME NOT NULL,
 		PRIMARY KEY(payment_id,deadline),
-		CHECK(status IN ('notPaid','Paid'))
+		CHECK(status IN ('notPaid','Paid'))--BASED ON M2 DESC
 
 	);
 GO
@@ -600,7 +623,7 @@ CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
 
 	SELECT @flag=count(*)
 	FROM PreqCourse_course pre
-	WHERE course_id=@crs_id AND NOT EXIST (
+	WHERE course_id=@crs_id AND NOT EXISTS (
 		SELECT *
 		FROM Student_Instructor_Course_Take
 		WHERE student_id=@studentID AND 
@@ -671,7 +694,7 @@ CREATE PROC Procedures_StudentSendingCourseRequest
 GO
 
 --2.3(EE)
-CREATE PROC
+CREATE PROC  Procedures_StudentSendingCHRequest
 	@Student_ID int, 
 	@credit_hours int, 
 	@type varchar (40),
@@ -856,9 +879,9 @@ AS
 	SELECT course_id
 	FROM GradPlan_Course
 	where @plan = plan_id and semester_code = @Currentsemestercode
-	except(
-		exec PROC Procedures_ViewRequiredCourses
-	)
+	--except(
+	--	exec PROC Procedures_ViewRequiredCourses
+	--)
 
 
 --2.3(NN)

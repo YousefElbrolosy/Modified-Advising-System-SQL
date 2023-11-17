@@ -672,7 +672,19 @@ CREATE PROC Procedures_AdvisorViewPendingRequests
 GO
 
 --2.3(AA)
+CREATE FUNCTION FN_StudentLogin (@StudentID int, @password varchar(40))
+	RETURNS BIT AS
 
+		BEGIN
+			DECLARE @count int
+
+			SELECT @count = count(*)
+			FROM Student
+			Where student_id = @StudentID and @password = password
+
+			RETURN @count
+		END
+GO
 
 --2.3(BB)
 CREATE PROC Procedures_StudentaddMobile

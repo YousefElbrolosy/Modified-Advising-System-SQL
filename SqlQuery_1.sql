@@ -519,7 +519,19 @@ CREATE PROC Procedures_AdminDeleteSlots
 	WHERE c.is_offered=0 AND cs.semester_code=@current_semester AND Slot.course_id=cs.course_id)
 GO
 --2.3(Q)
+CREATE FUNCTION FN_AdvisorLogin (@ID int, @password varchar(40))
+	RETURNS BIT AS
 
+		BEGIN
+			DECLARE @count int
+
+			SELECT @count = count(*)
+			FROM Advisor
+			Where advisor_id = @ID and @password = password
+
+			RETURN @count
+		END
+GO
 
 --2.3(R)
 CREATE PROC Procedures_AdvisorCreateGP
@@ -561,8 +573,6 @@ CREATE PROC Procedures_AdvisorUpdateGP
 	UPDATE Graduation_Plan
 	SET expected_grad_semester=@expected_grad_semster
 	WHERE student_id=@studentID
-
-
 GO
 --2.3(U)
 CREATE PROC Procedures_AdvisorDeleteFromGP

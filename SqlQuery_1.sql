@@ -64,7 +64,7 @@ Create Proc CreateAllTables
 		instructor_id int Foreign Key references Instructor, 
 		semester_code varchar(40) NOT NULL, 
 		exam_type varchar(40) DEFAULT 'Normal', 
-		grade varchar(40), --A,B,C or %
+		grade varchar(40), 
 		Primary Key(student_id,course_id,instructor_id),
 		CHECK (exam_type IN('Normal','First_makeup','Second_makeup'))	
 	);
@@ -106,7 +106,7 @@ Create Proc CreateAllTables
 		FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
 	);
 	Create Table Request (    -- NOT NULL
-		request_id int PRIMARY KEY, 
+		request_id int PRIMARY KEY IDENTITY, 
 		type varchar(40) NOT NULL, 
 		comment varchar(40), 
 		status varchar(40) DEFAULT 'pending', 
@@ -531,8 +531,16 @@ CREATE PROC Procedures_AdvisorAddCourseGP
 	VALUES(@plan_id,@Semester_code,@course_id)
 GO
 --2.3(T)
--- How would I update grad sem whilst I don't have such an attribute in gradPlan
+CREATE PROC Procedures_AdvisorUpdateGP
+	@expected_grad_semster varchar(40),
+	@studentID int
+	AS 
+	UPDATE Graduation_Plan
+	SET expected_grad_semester=@expected_grad_semster
+	WHERE student_id=@studentID
 
+
+GO
 --2.3(U)
 CREATE PROC Procedures_AdvisorDeleteFromGP
 	@studentID int, 
@@ -549,9 +557,9 @@ CREATE PROC Procedures_AdvisorDeleteFromGP
 GO
 
 --2.3(V)
---What is the meaning of "assigned hours"? In order to implement the 34 ch threshhold
 
 --2.3(W)
+--What is the meaning of "assigned hours"? In order to implement the 34 ch threshhold
 
 --2.3(X)
 CREATE PROC Procedures_AdvisorViewAssignedStudents
@@ -566,8 +574,60 @@ CREATE PROC Procedures_AdvisorViewAssignedStudents
 		  s.course_id=c.course_id
 GO
 --2.3(Y)
+CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
+	@RequestID int, 
+	@studentID int, 
+	@advisorID int
+	AS
+	DECLARE @crs_id int,
+	@flag int,
+	@assigned_hours int,
+	@credit_hours int
 
+	SELECT @assigned_hours=assigned_hours
+	FROM Student
+	WHERE student_id=@studentID
+	
+	SELECT @crs_id=course_id
+	FROM Request
+	WHERE request_id=@RequestID AND
+		  student_id=@studentID AND
+		  advisor_id=@advisorID
+	
+	SELECT @credit_hours=credit_hours
+	FROM Course 
+	WHERE course_id=@crs_id
 
+	SELECT @flag=count(*)
+	FROM PreqCourse_course pre
+	WHERE course_id=@crs_id AND NOT EXIST (
+		SELECT *
+		FROM Student_Instructor_Course_Take
+		WHERE student_id=@studentID AND 
+			  course_id=pre.prerequisite_course_id
+	)
+
+	IF (@flag=0 AND @assigned_hours>=@credit_hours)
+		BEGIN
+		UPDATE Request
+		SET status='accepted'
+		WHERE request_id=@RequestID AND
+			student_id=@studentID AND
+			advisor_id=@advisorID
+		UPDATE Student
+		SET assigned_hours=@assigned_hours-@credit_hours--Update assigned hours in the proc?
+		WHERE student_id=@studentID
+		END
+	ELSE
+	BEGIN
+		UPDATE Request
+		SET status='rejected'
+		WHERE request_id=@RequestID AND
+			student_id=@studentID AND
+			advisor_id=@advisorID
+		END
+		--Update StudentInstructorCourse Table with the new entry?
+GO
 
 --2.3(Z)
 CREATE PROC Procedures_AdvisorViewPendingRequests
@@ -577,4 +637,234 @@ CREATE PROC Procedures_AdvisorViewPendingRequests
 	FROM request 
 	WHERE advisor_id=@advisor_id AND status='pending'
 GO
+
+--2.3(AA)
+
+
+--2.3(BB)
+CREATE PROC Procedures_StudentaddMobile
+	@StudentID int,
+	@mobile_number varchar(40)
+	AS
+	INSERT INTO Student_Phone
+	VALUES(@StudentID,@mobile_number)
+
+GO
+
+--2.3(CC)
+
+
+--2.3(DD)
+CREATE PROC Procedures_StudentSendingCourseRequest
+	@Student_ID int, 
+	@course_ID int, 
+	@type varchar (40),
+	@comment varchar(40)
+	AS
+	DECLARE @advisor_id INT
+	SELECT @advisor_id=advisor_id
+	FROM Student 
+	WHERE student_ID=@Student_ID
+	INSERT INTO Request(type,comment,student_id,advisor_id,course_id)
+	VALUES(@type,@comment,@Student_ID,@advisor_id,@course_ID)
+
+GO
+
+--2.3(EE)
+CREATE PROC
+	@Student_ID int, 
+	@credit_hours int, 
+	@type varchar (40),
+	@comment varchar (40)
+	AS
+	DECLARE @advisor_id INT
+		SELECT @advisor_id=advisor_id
+		FROM Student 
+		WHERE student_ID=@Student_ID
+		INSERT INTO Request(type,comment,student_id,advisor_id,credit_hours)
+		VALUES(@type,@comment,@Student_ID,@advisor_id,@credit_hours)
+GO
+
+--2.3(FF)
+
+
+
+--2.3(GG)
+
+
+
+--2.3(HH)
+
+
+
+--2.3(II)
+CREATE PROC Procedures_StudentRegisterFirstMakeup
+	@StudentID int,
+	@courseID int, 
+	@studentCurrent_semester varchar(40) --Eh lazmet semester code? Whilst in JJ we got the grade without having it
+	AS
+	DECLARE 
+	@grade varchar(40),
+	@examID int
+	SELECT @grade=grade
+	FROM Student_Instructor_Course_Take
+	WHERE student_id=@StudentID AND course_id=@courseID AND semester_code=@studentCurrent_semester AND exam_type='Normal'
+
+	SELECT @examID=exam_id
+	FROM MakeUp_Exam
+	WHERE course_id=@courseID AND type='First_makeup'
+
+	IF (@grade in ('F','FF','FA'))--ADD ABS
+	BEGIN
+		INSERT INTO Exam_Student
+		VALUES(@examID,@studentID,@course_id)
+		UPDATE Student_Instructor_Course_Take
+		SET exam_type='First_makeup'
+		WHERE student_id=@StudentID AND course_id=@courseID AND semester_code=@studentCurrent_semester 
+	END
+GO
+
+--2.3(JJ)
+-- CREATE FUNCTION FN_StudentCheckSMEligiability (@CourseID int, @Student_ID int)
+-- RETURNS BIT AS
+-- 	BEGIN
+-- 	DECLARE @failed_courses INT,
+-- 	@grade varchar(40),
+-- 	@counteven INT,
+-- 	@countodd INT
+
+-- 	SELECT @grade=grade
+-- 	FROM Student_Instructor_Course_Take
+-- 	WHERE student_id=@StudentID AND course_id=@courseID AND exam_type='First_makeup'
+
+-- 	IF @grade NOT IN ('F','FF','FA')--Add Abs
+-- 		BEGIN
+-- 		RETURN 0
+-- 		END
+
+-- 	SELECT @countodd=count(*)
+-- 	FROM Student_Instructor_Course_Take
+-- 	WHERE student_id=@StudentID AND course_id=@courseID AND grade in ('F','FF','FA') AND semester_code LIKE 'W__'
+
+-- 	SELECT @counteven=count(*)
+-- 	FROM Student_Instructor_Course_Take
+-- 	WHERE student_id=@StudentID AND course_id=@courseID AND grade in ('F','FF','FA') AND semester_code LIKE 'S__'
+
+-- 	IF @countodd>2 OR @counteven>2
+-- 		BEGIN
+-- 		RETURN 0
+-- 		END
+
+	
+-- 	RETURN 1 -- Can u attend 2nd makeup if u failed the course 'F'
+-- 	END --WHAT TO DO ABOUT REQUIRED COURSES
+--I didn't delete it because there's comments written here nes'alhom and then n delete it
+
+GO
+create function FN_StudentCheckSMEligiability (@CourseID int, @StudentID int)
+	RETURNS BIT
+	AS
+
+	BEGIN
+
+	Declare 
+	@count INT,
+	@count2 INT,
+	@isElig BIT,
+	@grade VARCHAR(40)
+
+	SELECT @grade=grade
+		FROM Student_Instructor_Course_Take
+		WHERE student_id=@StudentID AND course_id=@courseID AND exam_type='First_makeup'
+
+	IF @grade NOT IN ('F','FF','FA')--Add Abs
+		BEGIN
+		RETURN 0
+		END
+
+	SELECT @count = count(*)
+	from Student_Instructor_Course_Take
+	WHERE semester_code like ('W__') AND student_id = @studentID and grade in ('F','FF','FA') and exam_type = 'first_makeup'
+
+	SELECT @count2 = count(*)
+	from Student_Instructor_Course_Take
+	WHERE semester_code like ('S__') AND student_id = @studentID and grade in ('F','FF','FA') and exam_type = 'first_makeup'
+
+	if @count<=2 and @count<=2
+		BEGIN
+		set @isElig = 1
+		END
+	ELSE
+		BEGIN
+		set @isElig = 0
+		END
+	return @isElig
+	END
+
+GO
+
+--2.3(KK)
+CREATE PROC Procedures_StudentRegisterSecondMakeup
+	@StudentID int, 
+	@courseID int, 
+	@Student_Current_Semester Varchar(40) --this input variable is used in what in this procedure
+	AS
+	DECLARE @elig_bit BIT,
+	@examID INT
+
+	SELECT @examID=exam_id
+	FROM MakeUp_Exam
+	WHERE course_id=@courseID AND type='Second_makeup'
+
+	SET @elig_bit= dbo.FN_StudentCheckSMEligiability(@courseID,@StudentID)
+
+	if (@elig_bit=1)
+	BEGIN
+	INSERT INTO Exam_Student
+		VALUES(@examID,@StudentID,@courseID)
+		UPDATE Student_Instructor_Course_Take
+		SET exam_type='Second_makeup'
+		WHERE student_id=@StudentID AND course_id=@courseID AND semester_code=@Student_Current_Semester 
+	END
+
+GO
+
+--2.3(LL)
+CREATE PROC Procedures_ViewRequiredCourses
+@StudentID int, 
+@Current_semester_code Varchar(40)
+AS
+SELECT c.* --rename column
+FROM Course c INNER JOIN  Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.studentID=@StudentID
+WHERE ( (s.exam_type='Second_makeup' and s.grade in('F','FF','FA')) OR
+		(s.exam_type='First_makeup' and  dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) OR
+		(s.exam_type='Normal' and s.grade='ABS')
+
+
+)
+GO
+--2.3(MM)
+CREATE PROC Procedures_ViewOptionalCourse
+@StudentID int, 
+@Currentsemestercode Varchar(40)
+AS
+	DECLARE @plan int
+	SELECT @plan=plan_id
+	FROM Graduation_plan
+	where @StudentID = student_id and @Currentsemestercode = semester_code
+
+	SELECT course_id
+	FROM GradPlan_Course
+	where @plan = plan_id and semester_code = @Currentsemestercode
+	except(
+		exec PROC Procedures_ViewRequiredCourses
+	)
+
+
+--2.3(NN)
+
+
+--2.3(OO)
+
+
 --Farahh

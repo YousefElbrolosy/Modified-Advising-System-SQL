@@ -13,7 +13,7 @@ Create Proc CreateAllTables
 	As
 	--INSERT VALUES IN (2.3-B)
 	Create Table Advisor( --NO PROBLEMS HERE BUT WE CAN THINK OF MORE CONSTRAINTS
-		advisor_id int PRIMARY KEY IDENTITY,--IDENTITY BASED ON (2.3-B) 
+		advisor_id int PRIMARY KEY IDENTITY NOT NULL,--IDENTITY BASED ON (2.3-B) 
 		name varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-B) 
 		email varchar(40) NOT NULL, --NOT NULL BASED ON (2.3-B) // We can add further Constraints 'LIKE (%@%.com)' 
 		office varchar(40) NOT NULL, --NOT NULL BASED ON (2.3-B) 
@@ -79,7 +79,7 @@ Create Proc CreateAllTables
 		semester_code varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-I)
 		exam_type varchar(40) DEFAULT 'Normal',--DEFAULT VALUE BASED ON M2 DESC 
 		grade varchar(40),--NULL BASED ON (2.3-I) 
-		Primary Key(student_id,course_id,instructor_id),
+		Primary Key(student_id,course_id),
 		CHECK (exam_type IN('Normal','First_makeup','Second_makeup'))--CONSTRAINT BASED ON M2 DESC	
 	);
 	--INSERT VALUES IN (2.3-F)
@@ -97,12 +97,10 @@ Create Proc CreateAllTables
 	--INSERT VALUES IN (NO IDEA) // INSTRUCTOR/COURSE In (2.3-H)
 	Create Table Slot (--NOT NULLS BASED ON THE ASSUMPTION THAT EVERY SLOT THAT EXISTS IS ALREADY STORED AND YOU JUST UPDATE THE INSTRUCTOR/COURSE THAT IS ASSIGNED TO THIS SLOT // WE CAN THINK OF MORE CONSTRAINTS
 		slot_id int Primary Key, 
-		day varchar(40) NOT NULL,--IN(Sundat,Monday,...) 
+		day varchar(40) NOT NULL,--IN(Sunday,Monday,...) 
 		time varchar(40) NOT NULL,--IN(1st,2nd,3rd,...) 
 		location varchar(40) NOT NULL, 
-		course_id int Foreign Key references Course-- NULL BASED ON (2.3-H) 
-		ON UPDATE CASCADE
-		ON DELETE CASCADE,
+		course_id int Foreign Key references Course,-- NULL BASED ON (2.3-H) 
 		instructor_id int Foreign Key references Instructor -- NULL BASED ON (2.3-H)
 	);
 	--INSERT VALUES IN (2.3-R)
@@ -155,7 +153,7 @@ Create Proc CreateAllTables
 		payment_id int PRIMARY KEY, 
 		amount int NOT NULL,
 		deadline DATETIME NOT NULL, 
-		n_installments as DATEDIFF(month,start_date,deadline), --CASE WHEN (year(deadline)=year(start_date)) THEN (MONTH(deadline) - MONTH(start_date)) ELSE ((12-MONTH(start_date))+MONTH(deadline)) END,--SAME AS DEADLINE COMMENT 
+		n_installments as DATEDIFF(month,start_date,deadline), 
 		status varchar(40) DEFAULT 'notPaid',--DEFAULT VALUE BASED ON M2 DESC 
 		fund_percentage decimal(5,2) NOT NULL,
 		start_date DATETIME NOT NULL,
@@ -235,7 +233,7 @@ CREATE view view_Course_prerequisites
 	AS
 	SELECT c.*,pre.prerequisite_course_id
 		FROM Course c
-			LEFT  JOIN PreqCourse_course pre ON c.course_id = pre.course_id 
+			LEFT OUTER JOIN PreqCourse_course pre ON c.course_id = pre.course_id 
 
 GO
 --2.2 (C)
@@ -261,7 +259,7 @@ CREATE view Courses_Slots_Instructor
 	SELECT c.course_id as CourseID , c.name as 'Course.name' , s.slot_id as 'Slot ID' , s.day as 'Slot Day' , 
             s.time as 'Slot Time', s.location as 'Slot Location' , I.name as 'Slot’s Instructor name'
 		FROM Course c 
-			LEFT JOIN Slot s ON c.course_id = s.course_id
+			LEFT OUTER JOIN Slot s ON c.course_id = s.course_id
 			INNER JOIN Instructor I ON I.instructor_id = s.instructor_id
 GO
 
@@ -287,8 +285,8 @@ CREATE VIEW Semster_offered_Courses
 	AS
 	SELECT c.course_id, c.name AS 'course_name', s.semester_code
 		FROM Semester s 
-		LEFT JOIN Course_Semester cs ON s.semester_code = cs.semester_code
-		LEFT JOIN Course c ON cs.course_id = c.course_id
+		LEFT OUTER JOIN Course_Semester cs ON s.semester_code = cs.semester_code
+		LEFT OUTER JOIN Course c ON cs.course_id = c.course_id
 GO
 
 --2.2 (I)
@@ -318,8 +316,6 @@ CREATE PROC Procedures_StudentRegistration
 		FROM Student
 GO
 --2.3(B)
-	--Farah and Brolosy
-	-- Brolosy
 CREATE PROCEDURE Procedures_AdvisorRegistration
 	@advisor_name varchar(40),
 	@password varchar(40),
@@ -332,7 +328,6 @@ CREATE PROCEDURE Procedures_AdvisorRegistration
 	SELECT @advisor_id = MAX(advisor_id)
 	From Advisor 
 
--- Are we sure that this will select after the column is added? Yes these statements are excuted sequentially
 GO
 --2.3(C) TOO SIMPLE??
 CREATE PROC Procedures_AdminListStudents
@@ -341,7 +336,6 @@ CREATE PROC Procedures_AdminListStudents
 		From Student
 GO
 --2.3(D)
-	--Farah and Brolosy
 CREATE PROCEDURE Procedures_AdminListAdvisors
 	AS 
 	SELECT * 
@@ -349,22 +343,11 @@ CREATE PROCEDURE Procedures_AdminListAdvisors
 	-- does he want names? or all data
 GO
 
-
---2.3(E)
-	Create PROC AdminListStudentsWithAdvisors
-	AS
-		SELECT s.f_name+' '+s.l_name AS student_name ,A.name as advisor_name--should i get all info wla names bs?
-		From Student s INNER JOIN Advisor A --should i get all students with left outer join wla inner 3ashan 2al with their advisor so he is expecting an advisor not a null value?
-		 ON a.advisor_id = A.advisor_id
-	GO
-
 -- 2.3(E)
--- Brolosy
 CREATE PROCEDURE AdminListStudentsWithAdvisors
 	AS
-	SELECT * 
+	SELECT s.f_name+' '+s.l_name AS student_name ,A.name as advisor_name--should i get all info wla names bs?
 	-- I THINK LEFT OUTER JOIN HERE IS TRIVIAL BECAUSE THERE WONT
-	--BE ANY REGISTERED STUDENTS WITH NO ADVISORS
 	FROM Student s LEFT OUTER JOIN Advisor a
 	ON s.advisor_id = a.advisor_id
 
@@ -380,7 +363,6 @@ Create Procedure AdminAddingSemester
 			VALUES(@semester_code,@start_date,@end_date)
 GO
 --2.3(G)
-	--Farah and Brolosy
 CREATE PROCEDURE Procedures_AdminAddingCourse
 	@major varchar(40),
 	@semester int,
@@ -404,7 +386,6 @@ GO
 				Where slot_id = @slotID
 	GO
 --2.3(I)
-	--Farah and Brolosy
 CREATE PROCEDURE Procedures_AdminLinkStudent
 	@instructor_id int,
 	@student_id int,
@@ -423,28 +404,8 @@ Create PROCEDURE Procedures_AdminLinkStudentToAdvisor
 		Set advisor_id = @advisorID
 		WHERE student_id = @studentID
 GO
+
 --2.3(K)
-Create PROC Procedures_AdminAddExam
-	@Type varchar (40),
-	@date datetime, 
-	@courseID int
-	As
-		INSERT INTO MakeUp_Exam (date,type,course_id)
-			VALUES(@date,@Type,@courseID)
-
-GO
---2.3(J) Brolosy
-CREATE PROCEDURE Procedures_AdminLinkStudentToAdvisor
-	@student_id int,
-	@advisor_id int
-	AS
-	UPDATE Student
-	SET advisor_id = @advisor_id 
-	WHERE student_id = @student_id
-	-- I think here update is okay because student_id is unique
-GO
-
---2.3(K) Brolosy
 CREATE PROCEDURE Procedures_AdminAddExam
 	@type varchar(40),
 	@date datetime,
@@ -480,6 +441,10 @@ CREATE PROC Procedures_AdminDeleteCourse
 	AS
 	DELETE FROM Course
 	WHERE course_id=@courseID
+	UPDATE Slot
+	SET course_id=NULL, instructor_id=NULL
+	WHERE course_id=@courseID
+
 
 GO
 --2.3(N)
@@ -541,12 +506,8 @@ CREATE PROC Procedures_AdvisorCreateGP
 	@advisor_id int,
 	@student_id int
 	AS
-	DECLARE @expected_grad_semester VARCHAR(40)
-	SELECT @expected_grad_semester=semester_code
-	FROM Semester
-	WHERE @expected_graduation_date BETWEEN start_date AND end_date
 	INSERT INTO Graduation_Plan
-	Values(@Semester_code,@sem_credit_hours,@expected_grad_semester,@advisor_id,@student_id)
+	Values(@Semester_code,@sem_credit_hours,@expected_graduation_date,@advisor_id,@student_id)
 GO
 --2.3(S)
 CREATE PROC Procedures_AdvisorAddCourseGP
@@ -615,13 +576,14 @@ CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
 	DECLARE @crs_id int,
 	@flag int,
 	@assigned_hours int,
-	@credit_hours int
+	@credit_hours int,
+	@semesterCode VARCHAR(40)
 
 	SELECT @assigned_hours=assigned_hours
 	FROM Student
 	WHERE student_id=@studentID
 	
-	SELECT @crs_id=course_id
+	SELECT @crs_id=course_id,@semester_code
 	FROM Request
 	WHERE request_id=@RequestID AND
 		  student_id=@studentID AND
@@ -650,16 +612,24 @@ CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
 		UPDATE Student
 		SET assigned_hours=@assigned_hours-@credit_hours--Update assigned hours in the proc?
 		WHERE student_id=@studentID
+	    --Update StudentInstructorCourse Table with the new entry?
+		SELECT @semesterCode=semester_code
+			FROM Course_Semester
+			WHERE course_id=@crs_id
+
+			INSERT INTO Student_Instructor_Course_Take(student_id,course_id,semester_code)
+			VALUES (@studentID,@crs_id,@semesterCode);
 		END
 	ELSE
-	BEGIN
+		BEGIN
 		UPDATE Request
 		SET status='rejected'
 		WHERE request_id=@RequestID AND
 			student_id=@studentID AND
 			advisor_id=@advisorID
 		END
-		--Update StudentInstructorCourse Table with the new entry?
+		
+	
 GO
 
 --2.3(Z)
@@ -887,7 +857,7 @@ AS
 
 	SELECT c.*
 	FROM Course c , Student s
-	Where c.major = s.major and s.student_id = @StudentID and s.semester>c.semester and not exists( SELECT ce.*
+	Where c.major = s.major and s.student_id = @StudentID and s.semester >c.semester and not exists( SELECT ce.*
 																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
 																				 WHERE ce.course_id = c.course_id
 																				)
@@ -902,16 +872,88 @@ AS
 	
 	SELECT c.*
 	FROM Course c , Student s
-	where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and not exists( SELECT ce.*
-																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
-																				 WHERE ce.course_id = c.course_id
-																				)
+	where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and 
+	NOT EXISTS( SELECT ce.*
+	FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+	WHERE ce.course_id = c.course_id AND NOT EXISTS(
+		SELECT p.prerequisite_course_id
+		FROM PreqCourse_course
+		WHERE ce.course_id=p.course_id
+		EXCEPT 
+		SELECT pr.prerequisite_course_id
+		FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
+		WHERE ce.course_id=pre.course_id
+	)
+	)
+	
 GO
 
 --2.3(NN)
+CREATE PROC Procedures_ViewMS 
+@StudentID int
+AS
+	-- SELECT c.*
+	-- FROM Course c , Student s
+	-- where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and 
+	-- NOT EXISTS( SELECT ce.*
+	-- FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+	-- WHERE ce.course_id = c.course_id AND EXISTS(
+	-- 	SELECT p.prerequisite_course_id
+	-- 	FROM PreqCourse_course
+	-- 	WHERE ce.course_id=p.course_id
+	-- 	EXCEPT 
+	-- 	SELECT pr.prerequisite_course_id
+	-- 	FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
+	-- 	WHERE ce.course_id=pre.course_id
+	-- )
+	--)
+	SELECT c.*
+	FROM Course 
+	EXCEPT 
+	(
+		SELECT c.*
+	FROM Course c , Student s
+	where  c.major = s.major and s.student_id = @StudentID and @Currentsemestercode<=c.semester and 
+	NOT EXISTS( SELECT ce.*
+	FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+	WHERE ce.course_id = c.course_id AND NOT EXISTS(
+		SELECT p.prerequisite_course_id
+		FROM PreqCourse_course
+		WHERE ce.course_id=p.course_id
+		EXCEPT 
+		SELECT pr.prerequisite_course_id
+		FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
+		WHERE ce.course_id=pre.course_id
+	)
+	)
+	UNION
+	(
+		SELECT c.* --rename column
+	FROM Course c INNER JOIN Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.studentID=@StudentID
+	WHERE  (dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) and s.grade in('F','FF','FA') 
+	
+	UNION
 
+	SELECT c.*
+	FROM Course c , Student s
+	Where c.major = s.major and s.student_id = @StudentID and @Current_semester_code >c.semester and not exists( SELECT ce.*
+																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+																				 WHERE ce.course_id = c.course_id
+																				)
+	)
+	)
+GO
 
 --2.3(OO)
+CREATE PROC Procedures_ChooseInstructor
+	@Student_ID int, 
+	@Instructor_ID int,
+	@Course_ID int
+	AS
+	UPDATE Student_Instructor_Course_Take
+	SET instructor_id=@Instructor_ID
+	WHERE student_id=@Student_ID AND course_id=@Course_ID
+
 
 
 --Farahh

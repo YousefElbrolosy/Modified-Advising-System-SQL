@@ -480,7 +480,7 @@ CREATE PROC Procedures_AdminDeleteSlots
 	SET course_id=NULL,instructor_id=NULL
 	WHERE EXISTS(
 	SELECT *
-	FROM Course_Semester cs INNER JOIN Course ON cs.course_id=c.course_id
+	FROM Course_Semester cs INNER JOIN Course c ON cs.course_id=c.course_id
 	WHERE c.is_offered=0 AND cs.semester_code=@current_semester AND Slot.course_id=cs.course_id)
 GO
 --2.3(Q)

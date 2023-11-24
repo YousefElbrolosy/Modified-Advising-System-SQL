@@ -33,12 +33,12 @@ Create Proc CreateAllTables
 		semester int NOT NULL,--NOT NULL BASED ON (2.3-A)
 		acquired_hours int,--NULL BASED ON (2.3-A)
 		assigned_hours int,--NULL BASED ON (2.3-A) and Ashan mawgouda f M1
-		advisor_id int Foreign Key references Advisor, --NULL BASED ON (2.3-A)
+		advisor_id int CONSTRAINT fk4 Foreign Key references Advisor, --NULL BASED ON (2.3-A)
 		CHECK (gpa BETWEEN 0.7 AND 5)--GPA CONSTRAINT BASED ON LOGIC
 	);
 	--INSERT VALUES IN (2.3-BB)
 	Create Table Student_Phone (--NO PROBLEMS HERE
-		student_id int Foreign Key references Student, 
+		student_id int CONSTRAINT fk5 Foreign Key references Student, 
 		phone_number varchar(40),
 		Primary Key(student_id,phone_number)
 	);
@@ -53,8 +53,8 @@ Create Proc CreateAllTables
 	);
 	--INSERT VALUES IN (NO IDEA)
 	Create Table PreqCourse_course (-- NO PROBLEMS HERE
-		prerequisite_course_id int FOREIGN KEY references Course, 
-		course_id int FOREIGN KEY references Course,
+		prerequisite_course_id int CONSTRAINT fk6 FOREIGN KEY references Course, 
+		course_id int CONSTRAINT fk7 FOREIGN KEY references Course,
 		Primary Key (prerequisite_course_id, course_id),
 	);
 	--INSERT VALUES IN (NO IDEA)
@@ -67,15 +67,15 @@ Create Proc CreateAllTables
 	);
 	--INSERT VALUES IN (NO IDEA)
 	Create Table Instructor_Course (--NO PROBLEMS HERE
-		course_id int FOREIGN KEY references Course, 
-		instructor_id int FOREIGN KEY references Instructor,
+		course_id int CONSTRAINT fk8 FOREIGN KEY references Course, 
+		instructor_id int CONSTRAINT fk9 FOREIGN KEY references Instructor,
 		Primary Key (course_id,instructor_id)
 	);
 	--INSERT VALUES IN (2.3-I)
 	Create Table Student_Instructor_Course_Take (--NO PROBLEMS HERE
-		student_id int Foreign Key references Student, 
-		course_id int Foreign Key references Course, 
-		instructor_id int Foreign Key references Instructor, 
+		student_id int CONSTRAINT fk10 Foreign Key references Student, 
+		course_id int CONSTRAINT fk11 Foreign Key references Course, 
+		instructor_id int CONSTRAINT fk12 Foreign Key references Instructor, 
 		semester_code varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-I)
 		exam_type varchar(40) DEFAULT 'Normal',--DEFAULT VALUE BASED ON M2 DESC 
 		grade varchar(40),--NULL BASED ON (2.3-I) 
@@ -90,8 +90,8 @@ Create Proc CreateAllTables
 	);
 	--INSERT VALUES IN (NO IDEA)
 	Create Table Course_Semester (--NO PROBLEMS HERE
-		course_id int FOREIGN KEY references Course, 
-		semester_code varchar(40) Foreign Key references Semester,
+		course_id int CONSTRAINT fk13 FOREIGN KEY references Course, 
+		semester_code varchar(40) CONSTRAINT fk14 Foreign Key references Semester,
 		Primary Key(course_id,semester_code)
 	);
 	--INSERT VALUES IN (NO IDEA) // INSTRUCTOR/COURSE In (2.3-H)
@@ -100,8 +100,8 @@ Create Proc CreateAllTables
 		day varchar(40) NOT NULL,--IN(Sunday,Monday,...) 
 		time varchar(40) NOT NULL,--IN(1st,2nd,3rd,...) 
 		location varchar(40) NOT NULL, 
-		course_id int Foreign Key references Course,-- NULL BASED ON (2.3-H) 
-		instructor_id int Foreign Key references Instructor -- NULL BASED ON (2.3-H)
+		course_id int CONSTRAINT fk15 Foreign Key references Course,-- NULL BASED ON (2.3-H) 
+		instructor_id int CONSTRAINT fk16 Foreign Key references Instructor -- NULL BASED ON (2.3-H)
 	);
 	--INSERT VALUES IN (2.3-R)
 	Create Table Graduation_Plan (--NO PROBLEMS HERE
@@ -109,17 +109,17 @@ Create Proc CreateAllTables
 		semester_code varchar(40), 
 		semester_credit_hours int NOT NULL,--NOT NULL BASED ON (2.3-R) 
 		expected_grad_date date NOT NULL,--NOT NULL BASED ON (2.3-R)
-		advisor_id int FOREIGN KEY references Advisor NOT NULL,--NOT NULL BASED ON (2.3-R)
-		student_id int FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON (2.3-R)
+		advisor_id int CONSTRAINT fk17 FOREIGN KEY references Advisor NOT NULL,--NOT NULL BASED ON (2.3-R)
+		student_id int CONSTRAINT fk18 FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON (2.3-R)
 		PRIMARY KEY (plan_id , semester_code)
 	);
 	--INSERT VALUES IN (NO IDEA) // DELETE VALUES (2.3-U)
 	Create Table GradPlan_Course (--NO PROBLEMS HERE
 		plan_id int, 
 		semester_code varchar(40), 
-		course_id int FOREIGN KEY references Course,
+		course_id int CONSTRAINT fk25 FOREIGN KEY references Course,
 		PRIMARY KEY(plan_id, semester_code, course_id),
-		FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
+		CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
 	);
 	--INSERT VALUES IN (2.3-DD // 2.3-EE)
 	Create Table Request (--ADVISOR --> NULL/NOT NULL
@@ -128,8 +128,8 @@ Create Proc CreateAllTables
 		comment varchar(40) NOT NULL,-- NOT NULL BASED ON  (2.3-DD // 2.3-EE)
 		status varchar(40) DEFAULT 'pending',--DEFAULT VALUE BASED ON M2 DESC 
 		credit_hours int,--NULL BASED ON (2.3-DD // 2.3-EE)
-		student_id int FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON  (2.3-DD // 2.3-EE) 
-		advisor_id int FOREIGN KEY references Advisor NOT NULL,--NULL UNTIL ADVISOR RESPONDS? OR PUT THE CURRENT STUDENT'S ADVISOR 
+		student_id int CONSTRAINT fk19 FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON  (2.3-DD // 2.3-EE) 
+		advisor_id int CONSTRAINT fk20 FOREIGN KEY references Advisor NOT NULL,--NULL UNTIL ADVISOR RESPONDS? OR PUT THE CURRENT STUDENT'S ADVISOR 
 		course_id int,--NULL BASED ON (2.3-DD // 2.3-EE)
 		CHECK (status IN ('pending','accepted','rejected'))--BASED ON M2 DESC 
 	);
@@ -138,13 +138,13 @@ Create Proc CreateAllTables
 		exam_id int PRIMARY KEY IDENTITY,--IDENTITY BASED ON (2.3-K)
 		date DATETIME NOT NULL,--DATETIME IN 2.3-K // DATE IN UPDATED SCHEMA // NOT NULL BASED ON (2.3-K) 
 		type varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-K) 
-		course_id int FOREIGN KEY references Course NOT NULL,--NOT NULL BASED ON (2.3-K) 
+		course_id int CONSTRAINT fk21 FOREIGN KEY references Course NOT NULL,--NOT NULL BASED ON (2.3-K) 
 		CHECK(type in('First_makeup','Second_makeup'))--BASED ON M2 DESC
 	);
 	--INSERT VALUES IN (2.3-II // 2.3-KK)
 	Create Table Exam_Student (--NO PROBLEMS HERE
-		exam_id int FOREIGN KEY references MakeUp_Exam, 
-		student_id int FOREIGN KEY references Student, 
+		exam_id int CONSTRAINT fk2 FOREIGN KEY references MakeUp_Exam, 
+		student_id int CONSTRAINT fk22 FOREIGN KEY references Student, 
 		course_id int NOT NULL,--NOT NULL BASED ON (2.3-II // 2.3-KK) 
 		PRIMARY KEY(exam_id,student_id)
 	);
@@ -157,14 +157,14 @@ Create Proc CreateAllTables
 		status varchar(40) DEFAULT 'notPaid',--DEFAULT VALUE BASED ON M2 DESC 
 		fund_percentage decimal(5,2) NOT NULL,
 		start_date DATETIME NOT NULL,
-		student_id int FOREIGN KEY references Student NOT NULL, 
-		semester_code varchar(40) references Semester NOT NULL, 
+		student_id int CONSTRAINT fk23 FOREIGN KEY references Student NOT NULL, 
+		semester_code varchar(40) CONSTRAINT fk24 FOREIGN KEY references Semester NOT NULL, 
 		CHECK(status IN ('notPaid','Paid'))--BASED ON M2 DESC
 	);
 	--INSERT VALUES IN (2.3-L)
 	Create Table Installment (
-		payment_id int FOREIGN KEY references Payment, 
-		deadline AS DATEADD(month, 1, start_date),--JUST COMMENT: heya sa7 bas it is not explicitly stated fel schema fa can we assume enaha derived?
+		payment_id int CONSTRAINT fk3 FOREIGN KEY references Payment, 
+		deadline datetime,--AS DATEADD(month, 1, start_date),--JUST COMMENT: heya sa7 bas it is not explicitly stated fel schema fa can we assume enaha derived?
 		amount int NOT NULL,
 		status varchar(40) DEFAULT 'notPaid', --DEFAULT VALUE BASED ON M2 DESC 
 		start_date DATETIME NOT NULL,
@@ -177,47 +177,144 @@ GO
 --2.1 (3)
 Create PROC DropAllTables
 	As
-	Drop table Student_instructor_course_take
-	Drop table Slot
-	Drop Table PreqCourse_course
-	Drop Table Instructor_Course
-	Drop Table GradPlan_Course
-	Drop Table Graduation_Plan
-	Drop Table Course_semester
-	Drop Table Request
-	Drop Table Exam_Student
-	Drop Table MakeUp_Exam
-	Drop Table Installment
-	Drop TABLE Payment
-	Drop TABLE Instructor
-	Drop TABLE Course
-	Drop Table Semester
-	Drop TABLE Student_Phone
-	Drop table Student
-	Drop table Advisor
+	DROP TABLE Student_instructor_course_take
+	DROP TABLE Slot
+	DROP TABLE PreqCourse_course
+	DROP TABLE Instructor_Course
+	DROP TABLE GradPlan_Course
+	DROP TABLE Graduation_Plan
+	DROP TABLE Course_semester
+	DROP TABLE Request
+	DROP TABLE Exam_Student
+	DROP TABLE MakeUp_Exam
+	DROP TABLE Installment
+	DROP TABLE Payment
+	DROP TABLE Instructor
+	DROP TABLE Course
+	DROP TABLE Semester
+	DROP TABLE Student_Phone
+	DROP TABLE Student
+	DROP TABLE Advisor
 GO
 ---------------------------------------------------------------------------------------
 --2.1 (4)
 CREATE PROCEDURE clearAllTables
-AS
-    TRUNCATE table Student_instructor_course_take
-    TRUNCATE table Slot
-    TRUNCATE Table PreqCourse_course
-    TRUNCATE Table Instructor_Course
-    TRUNCATE Table GradPlan_Course
-    TRUNCATE Table Graduation_Plan
-    TRUNCATE Table Course_semester
-    TRUNCATE Table Request
-    TRUNCATE Table Exam_Student
-    TRUNCATE Table MakeUp_Exam
-    TRUNCATE Table Installment
+AS	
+
+	ALTER TABLE GradPlan_Course
+	Drop fk1,fk25
+
+	ALTER TABLE Exam_Student
+	DROP fk2,fk22
+
+	ALTER TABLE Installment
+	DROP fk3
+
+	ALTER TABLE Student
+	DROP fk4
+
+	ALTER TABLE Student_Phone
+	DROP fk5
+
+	ALTER TABLE PreqCourse_course
+	DROP fk6,fk7
+
+	ALTER TABLE Instructor_Course
+	DROP fk8,fk9
+
+	ALTER TABLE Student_Instructor_Course_Take
+	DROP fk10,fk11,fk12
+
+	ALTER TABLE Course_Semester
+	DROP fk13,fk14
+
+	ALTER TABLE Slot
+	DROP fk15,fk16
+
+	ALTER TABLE Graduation_Plan
+	DROP fk17,fk18
+
+	ALTER TABLE Request
+	DROP fk19,fk20
+	
+	ALTER TABLE MakeUp_Exam
+	DROP fk21
+
+	ALTER TABLE Payment
+	DROP fk23,fk24
+
+    TRUNCATE TABLE Student_instructor_course_take
+    TRUNCATE TABLE Slot
+    TRUNCATE TABLE PreqCourse_course
+    TRUNCATE TABLE Instructor_Course
+    TRUNCATE TABLE GradPlan_Course
+    TRUNCATE TABLE Graduation_Plan
+    TRUNCATE TABLE Course_semester
+    TRUNCATE TABLE Request
+    TRUNCATE TABLE Exam_Student
+    TRUNCATE TABLE MakeUp_Exam
+    TRUNCATE TABLE Installment
     TRUNCATE TABLE Payment
     TRUNCATE TABLE Instructor
     TRUNCATE TABLE Course
-    TRUNCATE Table Semester
+    TRUNCATE TABLE Semester
     TRUNCATE TABLE Student_Phone
-    TRUNCATE table Student
-    TRUNCATE table Advisor
+    TRUNCATE TABLE Student
+    TRUNCATE TABLE Advisor
+
+	ALTER TABLE GradPlan_Course
+	ADD CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan,
+		CONSTRAINT fk25 FOREIGN KEY(course_id) references Course
+
+	ALTER TABLE Exam_Student
+	ADD CONSTRAINT fk2  FOREIGN KEY(exam_id) references MakeUp_Exam,
+		CONSTRAINT fk22 FOREIGN KEY(student_id) references Student 
+
+	ALTER TABLE Installment
+	ADD CONSTRAINT fk3 FOREIGN KEY(payment_id) references Payment
+
+	ALTER TABLE Student
+	ADD CONSTRAINT fk4 FOREIGN KEY(advisor_id) references Advisor
+
+	ALTER TABLE Student_Phone
+	ADD CONSTRAINT fk5 FOREIGN KEY(student_id) references Student
+
+	ALTER TABLE PreqCourse_course
+	ADD CONSTRAINT fk6 FOREIGN KEY(prerequisite_course_id) references Course,
+		CONSTRAINT fk7 FOREIGN KEY(course_id) references Course
+
+	ALTER TABLE Instructor_Course
+	ADD CONSTRAINT fk8 FOREIGN KEY(course_id) references Course,
+		CONSTRAINT fk9 FOREIGN KEY(instructor_id) references Instructor
+
+	ALTER TABLE Student_Instructor_Course_Take
+	ADD CONSTRAINT fk10 FOREIGN KEY(student_id) references Student,
+		CONSTRAINT fk11 FOREIGN KEY(course_id) references Course,
+		CONSTRAINT fk12 FOREIGN KEY(instructor_id) references Instructor
+
+	ALTER TABLE Course_Semester
+	ADD CONSTRAINT fk13 FOREIGN KEY(course_id) references Course,
+		CONSTRAINT fk14 FOREIGN KEY(semester_code) references Semester
+	
+	ALTER TABLE Slot
+	ADD CONSTRAINT fk15 FOREIGN KEY(course_id) references Course, 
+		CONSTRAINT fk16 FOREIGN KEY(instructor_id) references Instructor 
+
+	ALTER TABLE Graduation_Plan
+	ADD CONSTRAINT fk17 FOREIGN KEY(advisor_id) references Advisor,
+		CONSTRAINT fk18 FOREIGN KEY(student_id) references Student
+
+	ALTER TABLE Request
+	ADD	CONSTRAINT fk19 FOREIGN KEY(student_id) references Student,
+		CONSTRAINT fk20 FOREIGN KEY(advisor_id) references Advisor
+
+	ALTER TABLE MakeUp_Exam
+	ADD CONSTRAINT fk21 FOREIGN KEY(course_id) references Course
+
+	ALTER TABLE Payment
+	ADD	CONSTRAINT fk23 FOREIGN KEY(student_id) references Student,
+		CONSTRAINT fk24 FOREIGN KEY(semester_code) references Semester
+		
 GO
 ---------------------------------------------------------------------------------------
 --2.2 (A)

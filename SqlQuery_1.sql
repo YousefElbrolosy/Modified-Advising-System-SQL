@@ -108,7 +108,7 @@ Create Proc CreateAllTables
 		plan_id int IDENTITY,--IDENTITY BASED ON (2.3-R) 
 		semester_code varchar(40), 
 		semester_credit_hours int NOT NULL,--NOT NULL BASED ON (2.3-R) 
-		expected_grad_semester varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-R)
+		expected_grad_date date NOT NULL,--NOT NULL BASED ON (2.3-R)
 		advisor_id int FOREIGN KEY references Advisor NOT NULL,--NOT NULL BASED ON (2.3-R)
 		student_id int FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON (2.3-R)
 		PRIMARY KEY (plan_id , semester_code)
@@ -574,19 +574,34 @@ CREATE PROC Procedures_AdvisorApproveRejectCHRequest
 	@credit_hrs INT,
 	@studentID INT,
 	@gpa decimal(3,2),
-	@assignedhrs
+	@assignedhrs INT,
+	@tot_hours_curr_sem INT
 
-	SELECT @credit_hrs=credit_hours, @student_ID=r.student_id, @gpa=s.gpa
+	SELECT @credit_hrs=credit_hours, @student_ID=r.student_id, @gpa=s.gpa,@assignedhrs=s.assigned_hours
 	FROM Request r INNER JOIN student s ON r.student_id=s.student_id
 	WHERE r.request_id=@RequestID
 
+	SELECT @tot_hours_curr_sem= SUM(c.credit_hours)
+	FROM Student_Instructor_Course_Take st INNER JOIN Course c ON st.course_id=c.course_id
+	WHERE st.student_id=@studentID AND
+		  st.semester_code=@Current_semester_code
+		
+	IF (@gpa<=3.7 AND @credit_hrs<=3 AND (@tot_hours_curr_sem+@assigned_hours+@credit_hrs<=34))
+		BEGIN 
+			UPDATE Request
+			SET status='accepted'
+			WHERE request_id=@RequestID
 
-
-
-
-
-
-
+			UPDATE Student
+			SET assigned_hours=@assignedhrs+@credit_hrs
+			WHERE student_id=@studentID
+		END
+	ELSE
+		BEGIN
+			UPDATE Request
+				SET status='rejected'
+				WHERE request_id=@RequestID
+		END 
 
 GO
 --2.3(X)
@@ -743,11 +758,20 @@ CREATE PROC  Procedures_StudentSendingCHRequest
 GO
 
 --2.3(FF)
-
-
+CREATE FUNCTION FN_StudentViewGP(@student_ID INT)
+RETURNS TABLE
+AS
+RETURN (
+	SELECT s.student_id,s.f_name+' '+s.l_name AS 'Student name',gp.plan_id,c.course_id,c.name AS 'Course name',
+	 gp.semester_code,gp.expected_grad_date,gp.semester_credit_hours,gp.advisor_id
+    FROM Student s INNER JOIN Graduation_Plan gp ON gp.student_id = s.student_id
+			INNER JOIN GradPlan_Course gpc ON gp.plan_id = gpc.plan_id AND gp.semester_code=gpc.semester_code
+            INNER JOIN Course c ON gpc.course_id = c.course_id
+    where gp.student_ID = @student_ID 
+)
+GO
 
 --2.3(GG)
-
 create FUNCTION FN_StudentUpcoming_installment(@StudentID int)
 RETURNS DATETIME
 AS
@@ -755,9 +779,9 @@ BEGIN
 Declare @FIRST_DEADLINE_DATE DATETIME
 
 SELECT @FIRST_DEADLINE_DATE = MIN(I.deadline) --first not paid, asdo beha a2rb deadline of installment wla awl intallment nzlt?
-												--momken installment tnzl b3d installment we deadline bt3ha ykon abl el ableha
+											  --momken installment tnzl b3d installment we deadline bt3ha ykon abl el ableha
 FROM Payment p INNER JOIN Installment I on p.payment_id = I.payment_id
-WHERE p.student_id = @student_id and I.STATUS = 'notPaid'
+WHERE p.student_id = @StudentID and I.STATUS = 'notPaid'
 
 return @FIRST_DEADLINE_DATE
 END
@@ -768,10 +792,9 @@ GO
 Create Function FN_StudentViewSlot(@CourseID int, @InstructorID int)
 Returns TABLE
 AS
-
 Return 
-	(SELECT s.slot_id,s.location,s.time,s.day,c.name,i.name
-	FROM Slot s INNER JOIN Instructor i on s.instructor_id = i.instructor_id
+	(SELECT s.slot_id,s.location,s.time,s.day,c.name as 'Course name',i.name as 'Instructor name'
+	FROM Instructor i INNER JOIN Slot s  on s.instructor_id = i.instructor_id
 				Inner JOIN Course c on s.course_id = c.course_id
 	WHERE s.course_id = @CourseID and s.instructor_id = @InstructorID)
 GO
@@ -844,9 +867,7 @@ GO
 create function FN_StudentCheckSMEligiability (@CourseID int, @StudentID int)
 	RETURNS BIT
 	AS
-
 	BEGIN
-
 	Declare 
 	@count INT,
 	@count2 INT,

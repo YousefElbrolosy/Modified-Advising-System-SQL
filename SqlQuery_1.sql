@@ -79,7 +79,7 @@ Create Proc CreateAllTables
 		semester_code varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-I)
 		exam_type varchar(40) DEFAULT 'Normal',--DEFAULT VALUE BASED ON M2 DESC 
 		grade varchar(40),--NULL BASED ON (2.3-I) 
-		Primary Key(student_id,course_id),
+		Primary Key(student_id,course_id,semester_code),
 		CHECK (exam_type IN('Normal','First_makeup','Second_makeup'))--CONSTRAINT BASED ON M2 DESC	
 	);
 	--INSERT VALUES IN (2.3-F)
@@ -486,7 +486,6 @@ GO
 --2.3(Q)
 CREATE FUNCTION FN_AdvisorLogin (@ID int, @password varchar(40))
 	RETURNS BIT AS
-
 		BEGIN
 			DECLARE @count int
 
@@ -553,8 +552,29 @@ GO
 --2.3(V)
 
 --2.3(W)
---What is the meaning of "assigned hours"? In order to implement the 34 ch threshhold
+CREATE PROC Procedures_AdvisorApproveRejectCHRequest
+	@RequestID int, 
+	@Current_semester_code varchar(40)
+	AS
+	DECLARE 
+	@credit_hrs INT,
+	@studentID INT,
+	@gpa decimal(3,2),
+	@assignedhrs
 
+	SELECT @credit_hrs=credit_hours, @student_ID=r.student_id, @gpa=s.gpa
+	FROM Request r INNER JOIN student s ON r.student_id=s.student_id
+	WHERE r.request_id=@RequestID
+
+
+
+
+
+
+
+
+
+GO
 --2.3(X)
 CREATE PROC Procedures_AdvisorViewAssignedStudents
 	@AdvisorID int, 
@@ -574,7 +594,7 @@ CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
 	@advisorID int
 	AS
 	DECLARE @crs_id int,
-	@flag int,
+	@not_taken_prereq int,
 	@assigned_hours int,
 	@credit_hours int,
 	@semesterCode VARCHAR(40)
@@ -583,26 +603,26 @@ CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
 	FROM Student
 	WHERE student_id=@studentID
 	
-	SELECT @crs_id=course_id,@semester_code
-	FROM Request
-	WHERE request_id=@RequestID AND
-		  student_id=@studentID AND
-		  advisor_id=@advisorID
-	
-	SELECT @credit_hours=credit_hours
-	FROM Course 
-	WHERE course_id=@crs_id
+	SELECT @credit_hours=c.credit_hours,@crs_id=r.crs_id,@semesterCode=cs.semester_code
+	FROM Request r 
+		 INNER JOIN Course c ON r.course_id=c.course_id
+		 INNER JOIN  Course_Semester cs on cs.course_id=c.course_id
+	WHERE r.request_id=@RequestID AND
+		  r.student_id=@studentID AND
+		  r.advisor_id=@advisorID
 
-	SELECT @flag=count(*)
+	SELECT @not_taken_prereq=count(*)
 	FROM PreqCourse_course pre
 	WHERE course_id=@crs_id AND NOT EXISTS (
 		SELECT *
 		FROM Student_Instructor_Course_Take
 		WHERE student_id=@studentID AND 
-			  course_id=pre.prerequisite_course_id
+			  course_id=pre.prerequisite_course_id AND
+			  semester_code <> @semesterCode AND --to ensure that the student is not taking the prereq now
+			  grade is not null and grade not in ('F','FF','FA') --to ensure that the prerequisite is taken AND PASSED (tha is not null is extra,I've already checked eno msh byakhod el course delwaaty)
 	)
 
-	IF (@flag=0 AND @assigned_hours>=@credit_hours)
+	IF (@not_taken_prereq=0 AND @assigned_hours>=@credit_hours)
 		BEGIN
 		UPDATE Request
 		SET status='accepted'
@@ -610,15 +630,10 @@ CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
 			student_id=@studentID AND
 			advisor_id=@advisorID
 		UPDATE Student
-		SET assigned_hours=@assigned_hours-@credit_hours--Update assigned hours in the proc?
+		SET assigned_hours=@assigned_hours-@credit_hours
 		WHERE student_id=@studentID
-	    --Update StudentInstructorCourse Table with the new entry?
-		SELECT @semesterCode=semester_code
-			FROM Course_Semester
-			WHERE course_id=@crs_id
-
-			INSERT INTO Student_Instructor_Course_Take(student_id,course_id,semester_code)
-			VALUES (@studentID,@crs_id,@semesterCode);
+		INSERT INTO Student_Instructor_Course_Take(student_id,course_id,semester_code)
+		VALUES (@studentID,@crs_id,@semesterCode);
 		END
 	ELSE
 		BEGIN

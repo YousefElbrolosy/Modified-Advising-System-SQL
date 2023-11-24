@@ -748,10 +748,33 @@ GO
 
 --2.3(GG)
 
+create FUNCTION FN_StudentUpcoming_installment(@StudentID int)
+RETURNS DATETIME
+AS
+BEGIN
+Declare @FIRST_DEADLINE_DATE DATETIME
 
+SELECT @FIRST_DEADLINE_DATE = MIN(I.deadline) --first not paid, asdo beha a2rb deadline of installment wla awl intallment nzlt?
+												--momken installment tnzl b3d installment we deadline bt3ha ykon abl el ableha
+FROM Payment p INNER JOIN Installment I on p.payment_id = I.payment_id
+WHERE p.student_id = @student_id and I.STATUS = 'notPaid'
+
+return @FIRST_DEADLINE_DATE
+END
+GO
 
 --2.3(HH)
 
+Create Function FN_StudentViewSlot(@CourseID int, @InstructorID int)
+Returns TABLE
+AS
+
+Return 
+	(SELECT s.slot_id,s.location,s.time,s.day,c.name,i.name
+	FROM Slot s INNER JOIN Instructor i on s.instructor_id = i.instructor_id
+				Inner JOIN Course c on s.course_id = c.course_id
+	WHERE s.course_id = @CourseID and s.instructor_id = @InstructorID)
+GO
 
 
 --2.3(II)

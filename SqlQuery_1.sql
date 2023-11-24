@@ -1,7 +1,19 @@
-﻿--GENERAL QUESTIONS:
---1)SOME TABLES DOES NOT HAVE INSERT PROCEDURES (PREQCOURSES , INSTRUCTOR , INSTRUCTOR_COURSE , COURSE_SEMESTER , SLOT , GradPlan_Course)
---2)WHY IS THERE SOME PROCEDURES THAT CAN BE DONE USING VIEWS
---3)CAN WE HAVE DERIVED ATTRIBUTES THAT IS NOT STATED IN THE SCHEMA AND VICE VERSA
+﻿--TODO:
+--CALCULATE deadline in the installment proc as i removed it from createAllTables
+--------------------------------------------------------------------------------------
+--RECHECK (hagat momken nes2l 3aleha keda keda hantest kolo men el awl): 
+-- (*-->NOT THAT IMPORTANT // **-->MABEN EL ETNEN // ***-->VERY VERY IMPORTANT)
+--ALL 2.2*
+--2.3(A)**
+--2.3(C)*
+--2.3(D)*
+--2.3(E)*
+--2.3(L)**
+--2.3(N)***
+--2.3(O)*
+--2.3(P)***
+--2.3(V)* <--we2ft hena
+---------------------------------------------------------------------------------------
 --2.1 (1) NO PROBLEMS HERE
 CREATE DATABASE Advising_Team_61
 Go
@@ -113,7 +125,7 @@ Create Proc CreateAllTables
 		student_id int CONSTRAINT fk18 FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON (2.3-R)
 		PRIMARY KEY (plan_id , semester_code)
 	);
-	--INSERT VALUES IN (NO IDEA) // DELETE VALUES (2.3-U)
+	--INSERT VALUES IN (2.3-S) // DELETE VALUES (2.3-U)
 	Create Table GradPlan_Course (--NO PROBLEMS HERE
 		plan_id int, 
 		semester_code varchar(40), 
@@ -174,7 +186,7 @@ Create Proc CreateAllTables
 	);
 GO
 ------------------------------------------------------------------------------------
---2.1 (3)
+--2.1 (3) NO PROBLEMS HERE
 Create PROC DropAllTables
 	As
 	DROP TABLE Student_instructor_course_take
@@ -197,7 +209,7 @@ Create PROC DropAllTables
 	DROP TABLE Advisor
 GO
 ---------------------------------------------------------------------------------------
---2.1 (4)
+--2.1 (4) NO PROBLEMS HERE
 CREATE PROCEDURE clearAllTables
 AS	
 
@@ -317,6 +329,7 @@ AS
 		
 GO
 ---------------------------------------------------------------------------------------
+--ALL VIEWS COLUMNS NAME
 --2.2 (A)
 CREATE View view_Students
 	AS
@@ -396,7 +409,7 @@ CREATE VIEW Advisors_Graduation_Plan
 		WHERE g.advisor_id = a.advisor_id
 GO
 ---------------------------------------------------------------------------------------
---2.3 (A) MAKE SURE OF NULL VALUES AND FINANCIAL STATUS
+--2.3 (A) SHOULD WE CALL THE UPDATE FINANCIAL STATUS HERE?? / SHOULD WE CALCULATE AQH,ASH,GPA
 CREATE PROC Procedures_StudentRegistration
 	@first_name varchar(40), 
 	@last_name varchar(40), 
@@ -407,12 +420,13 @@ CREATE PROC Procedures_StudentRegistration
 	@Semester int,
 	@StudentID int OUTPUT
 	As
-	Insert Into Student(f_name,l_name,faculty,email,major,password,semester)
-		values(@first_name,@last_name,@faculty,@email,@major,@password,@Semester)
-	Select @StudentID = MAX(student_id)
+		INSERT INTO Student(f_name,l_name,faculty,email,major,password,semester)
+		VALUES(@first_name,@last_name,@faculty,@email,@major,@password,@Semester)
+		
+		SELECT @StudentID = MAX(student_id)
 		FROM Student
 GO
---2.3(B)
+--2.3(B) NO PROBLEMS HERE
 CREATE PROCEDURE Procedures_AdvisorRegistration
 	@advisor_name varchar(40),
 	@password varchar(40),
@@ -420,46 +434,48 @@ CREATE PROCEDURE Procedures_AdvisorRegistration
 	@office varchar(40),
 	@advisor_id int	OUTPUT
 	AS 
-	INSERT INTO Advisor(name, email, office, password)
-	VALUES(@advisor_name, @email, @office, @password)
-	SELECT @advisor_id = MAX(advisor_id)
-	From Advisor 
+		INSERT INTO Advisor(name, email, office, password)
+		VALUES(@advisor_name, @email, @office, @password)
+		
+		SELECT @advisor_id = MAX(advisor_id)
+		FROM Advisor 
 
 GO
---2.3(C) TOO SIMPLE??
+--2.3(C) COLUMNS??
 CREATE PROC Procedures_AdminListStudents
 	As
-	Select *
-		From Student
+		SELECT *
+		FROM Student
 GO
---2.3(D)
+
+--2.3(D) COLUMNS
 CREATE PROCEDURE Procedures_AdminListAdvisors
 	AS 
-	SELECT * 
-	FROM Advisor
+		SELECT * 
+		FROM Advisor
 	-- does he want names? or all data
 GO
 
--- 2.3(E)
+-- 2.3(E) LIST ALL STUDENTS or Students w Advisors (in other words inner or outer)/COLUMNS
 CREATE PROCEDURE AdminListStudentsWithAdvisors
 	AS
-	SELECT s.f_name+' '+s.l_name AS student_name ,A.name as advisor_name--should i get all info wla names bs?
-	-- I THINK LEFT OUTER JOIN HERE IS TRIVIAL BECAUSE THERE WONT
-	FROM Student s LEFT OUTER JOIN Advisor a
-	ON s.advisor_id = a.advisor_id
+		SELECT s.f_name+' '+s.l_name AS student_name ,A.name as advisor_name--should i get all info wla names bs?
+		-- I THINK LEFT OUTER JOIN HERE IS TRIVIAL BECAUSE THERE WONT
+		FROM Student s LEFT OUTER JOIN Advisor a ON s.advisor_id = a.advisor_id
 
-	GO
+GO
 
---2.3(F)
+--2.3(F) NO PROBLEM HERE
 Create Procedure AdminAddingSemester
 	@start_date date,
 	@end_date date,
 	@semester_code VARCHAR(40)
 	AS
 		Insert Into Semester
-			VALUES(@semester_code,@start_date,@end_date)
+		VALUES(@semester_code,@start_date,@end_date)
 GO
---2.3(G)
+
+--2.3(G) NO PROBLEM HERE
 CREATE PROCEDURE Procedures_AdminAddingCourse
 	@major varchar(40),
 	@semester int,
@@ -467,122 +483,132 @@ CREATE PROCEDURE Procedures_AdminAddingCourse
 	@course_name varchar(40),
 	@offered bit
 	AS
-	INSERT INTO Course(name, major, is_offered, credit_hours, semester)
-	VALUES(@course_name, @major, @offered, @credit_hours, @semester)
-
+		INSERT INTO Course(name, major, is_offered, credit_hours, semester)
+		VALUES(@course_name, @major, @offered, @credit_hours, @semester)
 GO
 
---2.3(H)
-	CREATE PROC Procedures_AdminLinkInstructor
-		@InstructorId int, 
-		@courseId int, 
-		@slotID int
-		As	
-			UPDATE Slot
-				Set instructor_id = @InstructorId,course_id = @courseId
-				Where slot_id = @slotID
-	GO
---2.3(I)
+--2.3(H) NO PROBLEM HERE
+CREATE PROC Procedures_AdminLinkInstructor
+	@InstructorId int, 
+	@courseId int, 
+	@slotID int
+	As	
+		UPDATE Slot
+		SET instructor_id = @InstructorId,
+			course_id = @courseId
+		WHERE slot_id = @slotID
+GO
+
+--2.3(I) NO PROBLEM HERE
 CREATE PROCEDURE Procedures_AdminLinkStudent
 	@instructor_id int,
 	@student_id int,
 	@course_id int,
 	@semester_code varchar(40)
 	AS
-	INSERT INTO Student_Instructor_Course_Take(student_id, course_id, instructor_id, semester_code)
-	VALUES(@student_id, @course_id, @instructor_id, @semester_code)
+		INSERT INTO Student_Instructor_Course_Take(student_id, course_id, instructor_id, semester_code)
+		VALUES(@student_id, @course_id, @instructor_id, @semester_code)
 GO
---2.3(J)
+
+--2.3(J) NO PROBLEM HERE
 Create PROCEDURE Procedures_AdminLinkStudentToAdvisor
 	@studentID int,
 	@advisorId int
 	AS
-	Update Student 
+		Update Student 
 		Set advisor_id = @advisorID
 		WHERE student_id = @studentID
 GO
 
---2.3(K)
+--2.3(K) NO PROBLEM HERE
 CREATE PROCEDURE Procedures_AdminAddExam
 	@type varchar(40),
 	@date datetime,
 	@course_id int
 	AS 
-	INSERT INTO MakeUp_Exam(date, type, course_id)
-	VALUES(@date,@type,@course_id)
+		INSERT INTO MakeUp_Exam(date, type, course_id)
+		VALUES(@date,@type,@course_id)
 GO
 
---2.3(L)
+--2.3(L) NO PROBLEM HERE/ recheck the deadline insertion
 CREATE PROC Procedures_AdminIssueInstallment
 	@payment_ID int
 	AS
-	DECLARE @n int
-	DECLARE @start_date date
-	DECLARE @amount int
+		DECLARE @n int,
+				@start_date date,
+			    @amount int
 
-	SELECT @n=n_installments ,@amount=amount/n_installments, @start_date=start_date
-	FROM Payment
-	WHERE payment_id=@payment_ID
+		SELECT @n=n_installments ,@amount=amount/n_installments, @start_date=start_date
+		FROM Payment
+		WHERE payment_id=@payment_ID
 
-	WHILE @n>0
-		BEGIN
-			INSERT INTO Installment(payment_id,amount,start_date)
-			VALUES (@payment_ID,@amount,@start_date)
-			SET @start_date = DATEADD(month, 1, @start_date)
-			SET @n= @n-1
-		END
+		WHILE @n>0
+			BEGIN
+				INSERT INTO Installment(payment_id,amount,start_date,deadline)
+				VALUES (@payment_ID,@amount,@start_date,DATEADD(month, 1, @start_date))
+
+				SET @start_date = DATEADD(month, 1, @start_date)
+				SET @n = @n-1
+			END
 GO
---2.3(M)
+--2.3(M) NO PROBLEM HERE
 CREATE PROC Procedures_AdminDeleteCourse
 	@courseID int
 	AS
-	DELETE FROM Course
-	WHERE course_id=@courseID
-	UPDATE Slot
-	SET course_id=NULL, instructor_id=NULL
-	WHERE course_id=@courseID
+		DELETE FROM Course
+		WHERE course_id=@courseID
 
-
+		UPDATE Slot
+		SET course_id=NULL, 
+			instructor_id=NULL
+		WHERE course_id=@courseID
 GO
---2.3(N)
+
+--2.3(N) HEYA MESH EL MAFROOD TOBAA 1 LAW EL TABLE NOT EXISTS?? W 0 OTHERWISE
 CREATE PROC  Procedure_AdminUpdateStudentStatus
 	@StudentID int
 	AS
 	UPDATE Student
 	SET financial_status =
-				CASE WHEN (NOT EXISTS (
-								SELECT *
-								FROM Installment i
-								WHERE (
-									(i.payment_id IN (SELECT payment_id
-									FROM Payment
-									WHERE student_id=@StudentID) AND CURRENT_TIMESTAMP > i.deadline AND i.status='notPaid'
-								)))) THEN 0 ELSE 1 END
+	CASE WHEN (
+		NOT EXISTS (
+					SELECT *
+					FROM Installment i
+					WHERE i.payment_id IN 
+							(SELECT payment_id
+							 FROM Payment
+							 WHERE student_id=@StudentID AND CURRENT_TIMESTAMP > i.deadline AND i.status='notPaid')
+				)) THEN 0 ELSE 1 END
 				
 	WHERE student_id=@StudentID
 GO
---2.3(O)
+
+--2.3(O) COLUMNS
 CREATE VIEW all_Pending_Requests
-AS
-SELECT r.request_id,r.type,r.comment,r.credit_hours,r.course_id, s.f_name+' '+s.l_name AS Student_name,a.name
+	AS
+		SELECT r.request_id,r.type,r.comment,r.credit_hours,r.course_id, s.f_name+' '+s.l_name AS Student_name,a.name
 		FROM Request r INNER JOIN Student s ON r.student_id=s.student_id 
 					   INNER JOIN Advisor a ON r.advisor_id=a.advisor_id
 		WHERE r.status='pending'
 GO
---2.3(P)
+
+--2.3(P) DIFFERENCE BETWEEN THIS AND (2.3-H) // SHOULD WE DELETE THE SLOT?? ANA FAKER EL TA ALET KEDA
 CREATE PROC Procedures_AdminDeleteSlots
 	@current_semester varchar(40)
 	AS
-	UPDATE Slot
-	SET course_id=NULL,instructor_id=NULL
-	WHERE EXISTS(
-	SELECT *
-	FROM Course_Semester cs INNER JOIN Course c ON cs.course_id=c.course_id
-	WHERE c.is_offered=0 AND cs.semester_code=@current_semester AND Slot.course_id=cs.course_id)
+		UPDATE Slot
+		SET course_id=NULL,
+			instructor_id=NULL
+		WHERE EXISTS(
+			SELECT *
+			FROM Course_Semester cs INNER JOIN Course c ON cs.course_id=c.course_id
+			WHERE c.is_offered=0 AND cs.semester_code=@current_semester AND Slot.course_id=cs.course_id)
 GO
---2.3(Q)
+
+--2.3(Q) NO PROBLEM HERE
 CREATE FUNCTION FN_AdvisorLogin (@ID int, @password varchar(40))
-	RETURNS BIT AS
+	RETURNS BIT 
+	AS
 		BEGIN
 			DECLARE @count int
 
@@ -594,7 +620,7 @@ CREATE FUNCTION FN_AdvisorLogin (@ID int, @password varchar(40))
 		END
 GO
 
---2.3(R)
+--2.3(R) NO PROBLEM HERE
 CREATE PROC Procedures_AdvisorCreateGP
 	@Semester_code varchar(40),
 	@expected_graduation_date date,
@@ -602,60 +628,65 @@ CREATE PROC Procedures_AdvisorCreateGP
 	@advisor_id int,
 	@student_id int
 	AS
-	INSERT INTO Graduation_Plan
-	Values(@Semester_code,@sem_credit_hours,@expected_graduation_date,@advisor_id,@student_id)
+		INSERT INTO Graduation_Plan
+		VALUES(@Semester_code,@sem_credit_hours,@expected_graduation_date,@advisor_id,@student_id)
 GO
---2.3(S)
+--2.3(S) NO PROBLEM HERE
 CREATE PROC Procedures_AdvisorAddCourseGP
 	@student_id int,
 	@Semester_code varchar(40),
 	@course_name varchar(40)
 	AS
-	DECLARE @plan_id INT
-	DECLARE @course_id INT
-	SELECT @plan_id=plan_id
-	FROM Graduation_Plan
-	WHERE student_id=@student_id AND semester_code=@Semester_code
-	SELECT @course_id=course_id
-	FROM Course
-	WHERE name=@course_name
-	INSERT INTO GradPlan_Course
-	VALUES(@plan_id,@Semester_code,@course_id)
+		DECLARE @plan_id INT,
+			    @course_id INT
+
+		SELECT @plan_id=plan_id
+		FROM Graduation_Plan
+		WHERE student_id=@student_id AND semester_code=@Semester_code
+		
+		SELECT @course_id=course_id
+		FROM Course
+		WHERE name=@course_name
+		
+		INSERT INTO GradPlan_Course
+		VALUES(@plan_id,@Semester_code,@course_id)
 GO
---2.3(T)
+
+--2.3(T) NO PROBLEM HERE
 CREATE PROC Procedures_AdvisorUpdateGP
 	@expected_grad_semster varchar(40),
 	@studentID int
 	AS 
-	UPDATE Graduation_Plan
-	SET expected_grad_semester=@expected_grad_semster
-	WHERE student_id=@studentID
+		UPDATE Graduation_Plan
+		SET expected_grad_semester=@expected_grad_semster
+		WHERE student_id=@studentID
 GO
---2.3(U)
+
+--2.3(U) NO PROBLEM HERE
 CREATE PROC Procedures_AdvisorDeleteFromGP
 	@studentID int, 
 	@semester_code varchar(40),
 	@course_ID INT
 	AS
+		DECLARE @plan_id INT
+		
+		SELECT @plan_id=plan_id
+		FROM Graduation_Plan
+		WHERE student_id=@student_id AND semester_code=@semester_code
 
-	DECLARE @plan_id INT
-	SELECT @plan_id=plan_id
-	FROM Graduation_Plan
-	WHERE student_id=@student_id AND semester_code=@semester_code
-
-	DELETE FROM GradPlan_Course WHERE (plan_id=@plan_id AND semester_code=@semester_code AND course_id=@course_ID)
+		DELETE FROM GradPlan_Course 
+		WHERE (plan_id=@plan_id AND semester_code=@semester_code AND course_id=@course_ID)
 GO
 
---2.3(V)
-CREATE FUNCTION FN_Advisors_Requests
-(@advisorID int)
-RETURNS TABLE
-AS
-RETURN(
-	SELECT *
-	FROM Request r
-	WHERE r.advisor_id = @advsorID
-)
+--2.3(V) COLUMNS
+CREATE FUNCTION FN_Advisors_Requests(@advisorID int)
+	RETURNS TABLE
+	AS
+		RETURN(
+			SELECT *
+			FROM Request r
+			WHERE r.advisor_id = @advsorID
+		)
 GO
 
 --Output: Table (Requests details related to this advisor)

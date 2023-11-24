@@ -550,6 +550,20 @@ CREATE PROC Procedures_AdvisorDeleteFromGP
 GO
 
 --2.3(V)
+CREATE FUNCTION FN_Advisors_Requests
+(@advisorID int)
+RETURNS TABLE
+AS
+RETURN(
+	SELECT *
+	FROM Request r
+	WHERE r.advisor_id = @advsorID
+)
+GO
+
+--Output: Table (Requests details related to this advisor)
+-- thats why I wrote SELECT *
+
 
 --2.3(W)
 CREATE PROC Procedures_AdvisorApproveRejectCHRequest
@@ -683,6 +697,19 @@ GO
 
 --2.3(CC)
 
+CREATE FUNCTION FN_SemsterAvailableCourses
+(@semester_code varchar(40))
+RETURNS TABLE
+AS 
+RETURN
+(
+	SELECT c.course_id as 'CourseID', c.name as 'Course Name', c.credit_hours as 'Credit Hours'
+	FROM Course c, Course_Semester r
+	WHERE c.course_id = r.course_id AND r.semester_code = @semester_code
+			AND c.is_offered = 1
+)
+
+GO
 
 --2.3(DD)
 CREATE PROC Procedures_StudentSendingCourseRequest

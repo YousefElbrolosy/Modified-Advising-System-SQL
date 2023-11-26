@@ -1,6 +1,4 @@
-﻿--TODO:
---CALCULATE deadline in the installment proc as i removed it from createAllTables
---------------------------------------------------------------------------------------
+﻿--------------------------------------------------------------------------------------
 --RECHECK (hagat momken nes2l 3aleha keda keda hantest kolo men el awl): 
 -- (*-->NOT THAT IMPORTANT // **-->MABEN EL ETNEN // ***-->VERY VERY IMPORTANT)
 --ALL 2.2*
@@ -399,9 +397,7 @@ CREATE VIEW Semster_offered_Courses
 		LEFT OUTER JOIN Course c ON cs.course_id = c.course_id
 GO
 
---2.2 (I)
--- advisor_id is included in g.*
--- do I need student_ID or no?		
+--2.2 (I)		
 CREATE VIEW Advisors_Graduation_Plan
 	AS
 	SELECT g.*, a.name AS 'advisor_name'
@@ -536,17 +532,16 @@ CREATE PROC Procedures_AdminIssueInstallment
 	AS
 		DECLARE @n int,
 				@start_date date,
-			    @amount int
+			    @amountperinstallment int
 
-		SELECT @n=n_installments ,@amount=amount/n_installments, @start_date=start_date
+		SELECT @n=n_installments ,@amountperinstallment=amount/n_installments, @start_date=start_date
 		FROM Payment
 		WHERE payment_id=@payment_ID
 
 		WHILE @n>0
 			BEGIN
 				INSERT INTO Installment(payment_id,amount,start_date,deadline)
-				VALUES (@payment_ID,@amount,@start_date,DATEADD(month, 1, @start_date))
-
+				VALUES (@payment_ID,@amountperinstallment,@start_date,DATEADD(month, 1, @start_date))
 				SET @start_date = DATEADD(month, 1, @start_date)
 				SET @n = @n-1
 			END
@@ -578,7 +573,7 @@ CREATE PROC  Procedure_AdminUpdateStudentStatus
 							(SELECT payment_id
 							 FROM Payment
 							 WHERE student_id=@StudentID AND CURRENT_TIMESTAMP > i.deadline AND i.status='notPaid')
-				)) THEN 0 ELSE 1 END
+				)) THEN 1 ELSE 0 END
 				
 	WHERE student_id=@StudentID
 GO
@@ -654,11 +649,11 @@ GO
 
 --2.3(T) NO PROBLEM HERE
 CREATE PROC Procedures_AdvisorUpdateGP
-	@expected_grad_semster varchar(40),
+	@expected_grad_date date,
 	@studentID int
 	AS 
 		UPDATE Graduation_Plan
-		SET expected_grad_semester=@expected_grad_semster
+		SET expected_grad_semester=@expected_grad_date
 		WHERE student_id=@studentID
 GO
 
@@ -694,42 +689,42 @@ GO
 
 
 --2.3(W)
-CREATE PROC Procedures_AdvisorApproveRejectCHRequest
-	@RequestID int, 
-	@Current_semester_code varchar(40)
-	AS
-	DECLARE 
-	@credit_hrs INT,
-	@studentID INT,
-	@gpa decimal(3,2),
-	@assignedhrs INT,
-	@tot_hours_curr_sem INT
+-- CREATE PROC Procedures_AdvisorApproveRejectCHRequest
+-- 	@RequestID int, 
+-- 	@Current_semester_code varchar(40)
+-- 	AS
+-- 	DECLARE 
+-- 	@credit_hrs INT,
+-- 	@studentID INT,
+-- 	@gpa decimal(3,2),
+-- 	@assignedhrs INT,
+-- 	@tot_hours_curr_sem INT
 
-	SELECT @credit_hrs=credit_hours, @student_ID=r.student_id, @gpa=s.gpa,@assignedhrs=s.assigned_hours
-	FROM Request r INNER JOIN student s ON r.student_id=s.student_id
-	WHERE r.request_id=@RequestID
+-- 	SELECT @credit_hrs=credit_hours, @student_ID=r.student_id, @gpa=s.gpa,@assignedhrs=s.assigned_hours
+-- 	FROM Request r INNER JOIN student s ON r.student_id=s.student_id
+-- 	WHERE r.request_id=@RequestID
 
-	SELECT @tot_hours_curr_sem= SUM(c.credit_hours)
-	FROM Student_Instructor_Course_Take st INNER JOIN Course c ON st.course_id=c.course_id
-	WHERE st.student_id=@studentID AND
-		  st.semester_code=@Current_semester_code
+-- 	SELECT @tot_hours_curr_sem= SUM(c.credit_hours)
+-- 	FROM Student_Instructor_Course_Take st INNER JOIN Course c ON st.course_id=c.course_id
+-- 	WHERE st.student_id=@studentID AND
+-- 		  st.semester_code=@Current_semester_code
 		
-	IF (@gpa<=3.7 AND @credit_hrs<=3 AND (@tot_hours_curr_sem+@assigned_hours+@credit_hrs<=34))
-		BEGIN 
-			UPDATE Request
-			SET status='accepted'
-			WHERE request_id=@RequestID
+	-- IF (@gpa<=3.7 AND @credit_hrs<=3 AND (@tot_hours_curr_sem+@assigned_hours+@credit_hrs<=34))
+	-- 	BEGIN 
+	-- 		UPDATE Request
+	-- 		SET status='accepted'
+	-- 		WHERE request_id=@RequestID
 
-			UPDATE Student
-			SET assigned_hours=@assignedhrs+@credit_hrs
-			WHERE student_id=@studentID
-		END
-	ELSE
-		BEGIN
-			UPDATE Request
-				SET status='rejected'
-				WHERE request_id=@RequestID
-		END 
+	-- 		UPDATE Student
+	-- 		SET assigned_hours=@assignedhrs+@credit_hrs
+	-- 		WHERE student_id=@studentID
+	-- 	END
+	-- ELSE
+	-- 	BEGIN
+	-- 		UPDATE Request
+	-- 			SET status='rejected'
+	-- 			WHERE request_id=@RequestID
+	-- 	END 
 
 GO
 --2.3(X)
@@ -932,26 +927,31 @@ GO
 CREATE PROC Procedures_StudentRegisterFirstMakeup
 	@StudentID int,
 	@courseID int, 
-	@studentCurrent_semester varchar(40) --Eh lazmet semester code? Whilst in JJ we got the grade without having it
+	@studentCurrent_semester varchar(40)
 	AS
 	DECLARE 
 	@grade varchar(40),
-	@examID int
+	@examID int,
+	@taken BIT
+
 	SELECT @grade=grade
 	FROM Student_Instructor_Course_Take
-	WHERE student_id=@StudentID AND course_id=@courseID AND semester_code=@studentCurrent_semester AND exam_type='Normal'
+	WHERE student_id=@StudentID AND course_id=@courseID AND exam_type='Normal'
 
 	SELECT @examID=exam_id
 	FROM MakeUp_Exam
 	WHERE course_id=@courseID AND type='First_makeup'
 
-	IF (@grade in ('F','FF','FA'))--ADD ABS
+	IF ( NOT EXISTS ( SELECT * 
+					  FROM Student_Instructor_Course_Take
+					  WHERE student_id=@StudentID AND course_id=@courseID AND exam_type LIKE '%makeup' 
+					) AND 
+		(@grade IS NULL or @grade in ('F','FF')))--ADD FA?
 	BEGIN
 		INSERT INTO Exam_Student
-		VALUES(@examID,@studentID,@course_id)
-		UPDATE Student_Instructor_Course_Take
-		SET exam_type='First_makeup'
-		WHERE student_id=@StudentID AND course_id=@courseID AND semester_code=@studentCurrent_semester 
+			VALUES(@examID,@studentID,@course_id)
+		INSERT INTO Student_Instructor_Course_Take(student_id,course_id,semester_code,exam_type)
+			VALUES(@StudentID,@courseID,@studentCurrent_semester,'First_makeup')
 	END
 GO
 
@@ -1036,7 +1036,7 @@ GO
 CREATE PROC Procedures_StudentRegisterSecondMakeup
 	@StudentID int, 
 	@courseID int, 
-	@Student_Current_Semester Varchar(40) --this input variable is used in what in this procedure
+	@Student_Current_Semester Varchar(40) 
 	AS
 	DECLARE @elig_bit BIT,
 	@examID INT
@@ -1049,11 +1049,10 @@ CREATE PROC Procedures_StudentRegisterSecondMakeup
 
 	if (@elig_bit=1)
 	BEGIN
-	INSERT INTO Exam_Student
-		VALUES(@examID,@StudentID,@courseID)
-		UPDATE Student_Instructor_Course_Take
-		SET exam_type='Second_makeup'
-		WHERE student_id=@StudentID AND course_id=@courseID AND semester_code=@Student_Current_Semester 
+		INSERT INTO Exam_Student
+			VALUES(@examID,@StudentID,@courseID)
+		INSERT INTO Student_Instructor_Course_Take(student_id,course_id,semester_code,exam_type)
+			VALUES(@StudentID,@courseID,@Student_Current_Semester,'Second_makeup')
 	END
 
 GO
@@ -1103,6 +1102,7 @@ AS
 GO
 
 --2.3(NN)
+--Add on this the courses that belong to the major that the student hasn't taken it yet
 CREATE PROC Procedures_ViewMS 
 @StudentID int
 AS

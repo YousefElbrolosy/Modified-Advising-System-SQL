@@ -11,6 +11,9 @@
 --2.3(O)*
 --2.3(P)***
 --2.3(V)* <--we2ft hena
+
+--An advising student must have at least one missed course. A course is considered missed if the student failed/didn’t attend the course
+--^^DO I HAVE TO CHECK THE ABOVE POINT
 ---------------------------------------------------------------------------------------
 --2.1 (1) NO PROBLEMS HERE
 CREATE DATABASE Advising_Team_61
@@ -689,42 +692,49 @@ GO
 
 
 --2.3(W)
--- CREATE PROC Procedures_AdvisorApproveRejectCHRequest
--- 	@RequestID int, 
--- 	@Current_semester_code varchar(40)
--- 	AS
--- 	DECLARE 
--- 	@credit_hrs INT,
--- 	@studentID INT,
--- 	@gpa decimal(3,2),
--- 	@assignedhrs INT,
--- 	@tot_hours_curr_sem INT
+CREATE PROC Procedures_AdvisorApproveRejectCHRequest
+	@RequestID int, 
+	@Current_semester_code varchar(40)
+	AS
+	DECLARE 
+	@credit_hrs_req INT,
+	@studentID INT,
+	@gpa decimal(3,2),
+	@assignedhrs INT
 
--- 	SELECT @credit_hrs=credit_hours, @student_ID=r.student_id, @gpa=s.gpa,@assignedhrs=s.assigned_hours
--- 	FROM Request r INNER JOIN student s ON r.student_id=s.student_id
--- 	WHERE r.request_id=@RequestID
+	SELECT @credit_hrs_req=r.credit_hours, @student_ID=r.student_id, @gpa=s.gpa,@assignedhrs=s.assigned_hours
+	FROM Request r INNER JOIN student s ON r.student_id=s.student_id
+	WHERE r.request_id=@RequestID
 
--- 	SELECT @tot_hours_curr_sem= SUM(c.credit_hours)
--- 	FROM Student_Instructor_Course_Take st INNER JOIN Course c ON st.course_id=c.course_id
--- 	WHERE st.student_id=@studentID AND
--- 		  st.semester_code=@Current_semester_code
-		
-	-- IF (@gpa<=3.7 AND @credit_hrs<=3 AND (@tot_hours_curr_sem+@assigned_hours+@credit_hrs<=34))
-	-- 	BEGIN 
-	-- 		UPDATE Request
-	-- 		SET status='accepted'
-	-- 		WHERE request_id=@RequestID
+	IF (@gpa<=3.7 AND @credit_hrs_req<=3 AND (@assigned_hours+@credit_hrs_req<=34))
+		BEGIN 
+			UPDATE Request
+			SET status='accepted'
+			WHERE request_id=@RequestID
 
-	-- 		UPDATE Student
-	-- 		SET assigned_hours=@assignedhrs+@credit_hrs
-	-- 		WHERE student_id=@studentID
-	-- 	END
-	-- ELSE
-	-- 	BEGIN
-	-- 		UPDATE Request
-	-- 			SET status='rejected'
-	-- 			WHERE request_id=@RequestID
-	-- 	END 
+			UPDATE Student
+			SET assigned_hours=@assignedhrs+@credit_hrs
+			WHERE student_id=@studentID
+
+			DECLARE @extra_money INT,
+			@payment_ID INT
+			SET @extra_money =@credit_hrs_req*1000
+
+			SELECT @payment_ID= payment_id
+			FROM Payment
+			WHERE student_id=@studentID AND semester_code=@Current_semester_code
+
+			UPDATE Payment
+			SET amount=amount+@extra_money
+			WHERE student_id=@studentID AND semester_code=@Current_semester_code
+			
+		END
+	ELSE
+		BEGIN
+			UPDATE Request
+				SET status='rejected'
+				WHERE request_id=@RequestID
+		END 
 
 GO
 --2.3(X)

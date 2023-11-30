@@ -1,2 +1,12 @@
 1. When we update the installments to account for the approved added credit hours,
-Which installment to add on?
+   which installment to add on? the upcoming one as in el wahda el baad el active delwaaty?
+
+2.  An advising student must have at least one missed course. --MILESTONE 1 (POINTS TO CONSIDER)
+    A course is considered missed if the student failed/didn’t attend the course
+    ^^^msh haaraf a check whenever a student registers because I still don't have an ID (moreover msh haaraf yeb'a fee instance l 
+       student_course_instructot_take mengheir mayeb'a fe student instance ashan el foreign key)
+
+3. You need to check the request type in 2.3.W and 2.3.Y 
+    ^^^^ eh syntax el type?
+
+-->Check when creating graduation plan that acquired hours are greater that 157 

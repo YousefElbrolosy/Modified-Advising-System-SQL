@@ -1,0 +1,45 @@
+insert into Advisor (name, email, office, password) values ('Youssef Salah', 'iboggers0@is.gd', 'Office G', 'gU2\ChAXV2Emk');
+insert into Advisor (name, email, office, password) values ('Ahmed Hassan', 'vcolebeck1@nps.gov', 'Office C', 'zI1,R$''P');
+insert into Advisor (name, email, office, password) values ('Fatima Ibrahim', 'jcast2@yolasite.com', 'Office F', 'fF3@HUHX');
+insert into Advisor (name, email, office, password) values ('Noura Ahmed', 'asilkston3@furl.net', 'Office I', 'oU4|vySiS$U_5+g');
+insert into Advisor (name, email, office, password) values ('Youssef Salah', 'llaydon4@china.com.cn', 'Office I', 'xH3*5P"yhS96a2');
+insert into Advisor (name, email, office, password) values ('Amira Mahmoud', 'nwace5@house.gov', 'Office D', 'lH3)muL?Rux=V8');
+insert into Advisor (name, email, office, password) values ('Omar Khalid', 'jmullin6@zimbio.com', 'Office J', 'fJ5<~iD}~}HzZ#o');
+insert into Advisor (name, email, office, password) values ('Mohamed Ali', 'kmarkwell7@biglobe.ne.jp', 'Office G', 'vW6}N/GJf2RaV''#{');
+insert into Advisor (name, email, office, password) values ('Noura Ahmed', 'abulger8@google.es', 'Office I', 'nG5+Z|~+i');
+insert into Advisor (name, email, office, password) values ('Amira Mahmoud', 'mlebarre9@java.com', 'Office B', 'bL2}2rb>');
+insert into Advisor (name, email, office, password) values ('Noura Ahmed', 'rommanneya@newyorker.com', 'Office I', 'nH7@48P''DEJmb%');
+insert into Advisor (name, email, office, password) values ('Noura Ahmed', 'ddearnleyb@sakura.ne.jp', 'Office I', 'oF8<OhPA&M+B#');
+insert into Advisor (name, email, office, password) values ('Fatima Ibrahim', 'mgrundyc@stanford.edu', 'Office E', 'mO0/3H20,QK/');
+insert into Advisor (name, email, office, password) values ('Aya Mohamed', 'nsaggsd@tinypic.com', 'Office J', 'jG2=J"sbTKUWK5''');
+insert into Advisor (name, email, office, password) values ('Hassan Mahmoud', 'tfiggurese@adobe.com', 'Office E', 'lS0.T`MN17{');
+
+
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Khaled', 'El-Badawi', 3.92, 'Engineering', 'pwaddilow0@webeden.co.uk', 'IET', 'pV5/Cm({', 0, 2, 43, 11, 15);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Hassan', 'El-Din', 4.3, 'Law', 'aolahy1@g.co', 'LAW', 'mI7?lniCY!9,ncK_', 0, 6, 86, 8, 2);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Nour', 'Ibrahim', 4.64, 'Business', 'lley2@java.com', 'BI', 'wP2\K.=CpfAN', 0, 7, 44, 5, 12);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Rania', 'Nasr', 2.85, 'Business', 'mfassbender3@exblog.jp', 'BI', 'rB0+/ZoBYqA', 0, 10, 72, 20, 15);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Dalia', 'Hassan', 1.64, 'Law', 'mholdforth4@mysql.com', 'LAW', 'qG9"V4/L~c%a', 1, 6, 84, 7, 9);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Tarek', 'Helmy', 2.48, 'Pharmacy', 'doneal5@mozilla.org', 'BIOTECH', 'iV2)hmX8gx', 1, 5, 67, 3, 10);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Dalia', 'El-Farouk', 4.28, 'Engineering', 'cromaynes6@e-recht24.de', 'IET', 'fO6?q6NiI7', 0, 10, 80, 22, 6);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Nagla', 'Mohamed', 3.14, 'Engineering', 'alaidel7@google.ru', 'MET', 'cP1/|''q)j\>8P0),', 0, 6, 41, 19, 4);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Hana', 'Fahmy', 1.23, 'Engineering', 'chancock8@psu.edu', 'MET', 'jU6$YOU92|3', 0, 3, 37, 31, 2);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Salma', 'Ibrahim', 2.96, 'Law', 'vhawton9@cafepress.com', 'LAW', 'eU9>am5Jq|X"i+', 1, 3, 34, 5, 10);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Hosni', 'Aziz', 1.63, 'Law', 'tbengocheaa@jiathis.com', 'LAW', 'iN6{AA"u68', 0, 9, 34, 24, 2);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Ahmed', 'El-Husseini', 3.49, 'Engineering', 'hbowdlerb@rediff.com', 'MET', 'lA1.!/}oC', 1, 10, 78, 23, 4);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Samir', 'Gad', 2.05, 'Law', 'cfacherc@latimes.com', 'LAW', 'cW3+B1sv>bgz3}', 1, 1, 34, 3, 4);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Ahmed', 'El-Tayeb', 1.67, 'Business', 'dchiddyd@sbwire.com', 'BI', 'uB8?K*HP', 1, 9, 92, 16, 10);
+insert into Student (f_name, l_name, gpa, faculty, email, major, password, financial_status, semester, acquired_hours, assigned_hours, advisor_id) values ('Khaled', 'Bakr', 4.2, 'Pharmacy', 'hvernhame@yale.edu', 'BIOTECH', 'wY2?0)sEogy4', 0, 9, 49, 22, 7);
+
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(1,2)
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(1,3)
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(1,4)
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(2,3)
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(2,4)
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(3,4)
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(5,6)
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(5,'MATH301')
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(5,'MATH401')
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(6,'MATH301')
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES(6,'MATH401')
+INSERT INTO PreqCourse_course(prerequisite_course_id,course_id) VALUES('MATH301','MATH401')

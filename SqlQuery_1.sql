@@ -677,7 +677,7 @@ CREATE PROC Procedures_AdvisorUpdateGP
 	@studentID int
 	AS 
 		UPDATE Graduation_Plan
-		SET expected_grad_semester=@expected_grad_date
+		SET expected_grad_date=@expected_grad_date
 		WHERE student_id=@studentID
 GO
 
@@ -738,16 +738,22 @@ CREATE PROC Procedures_AdvisorApproveRejectCHRequest
 			WHERE student_id=@studentID
 
 			DECLARE @extra_money INT,
-			@payment_ID INT
+			@payment_ID INT,
+			@deadline DATE
 			SET @extra_money =@credit_hrs_req*1000
 
 			SELECT @payment_ID= payment_id
-			FROM Payment
+			FROM Payment p INNER JOIN Installment i on p.payment_id=i.deadline
 			WHERE student_id=@studentID AND semester_code=@Current_semester_code
 
 			UPDATE Payment
 			SET amount=amount+@extra_money
 			WHERE student_id=@studentID AND semester_code=@Current_semester_code
+
+			SELECT MIN(deadline)
+			FROM Installment
+
+			
 			
 		END
 	ELSE
@@ -771,37 +777,34 @@ CREATE PROC Procedures_AdvisorViewAssignedStudents
 GO
 --2.3(Y)
 CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
-	@RequestID int, 
-	@studentID int, 
-	@advisorID int
+	@RequestID int,
+	@current_semester_code varchar(40)
 	AS
 	DECLARE @crs_id int,
 	@not_taken_prereq int,
 	@assigned_hours int,
 	@credit_hours int,
-	@semesterCode VARCHAR(40)
+	@studentID int
 
-	SELECT @assigned_hours=assigned_hours
-	FROM Student
-	WHERE student_id=@studentID
 	
-	SELECT @credit_hours=c.credit_hours,@crs_id=r.course_id,@semesterCode=cs.semester_code
+	SELECT @credit_hours=c.credit_hours,@crs_id=r.course_id
 	FROM Request r 
 		 INNER JOIN Course c ON r.course_id=c.course_id
-		 INNER JOIN  Course_Semester cs on cs.course_id=c.course_id
-	WHERE r.request_id=@RequestID AND
-		  r.student_id=@studentID AND
-		  r.advisor_id=@advisorID
+		 INNER JOIN  Course_Semester cs on cs.course_id=c.course_id --to check that the course is offered
+	WHERE r.request_id=@RequestID AND cs.semester_code=@current_semester_code
+	
+	SELECT @assigned_hours=s.assigned_hours, @studentID=r.student_id
+	FROM Student s INNER JOIN Request r ON r.student_id=s.student_id
 
-	SELECT @not_taken_prereq=count(*)
+	SELECT @not_taken_prereq=count(pre.prerequisite_course_id)
 	FROM PreqCourse_course pre
 	WHERE course_id=@crs_id AND NOT EXISTS (
 		SELECT *
 		FROM Student_Instructor_Course_Take
 		WHERE student_id=@studentID AND 
-			  course_id=pre.prerequisite_course_id AND
-			  semester_code <> @semesterCode AND --to ensure that the student is not taking the prereq now
-			  grade is not null and grade not in ('F','FF','FA') --to ensure that the prerequisite is taken AND PASSED (tha is not null is extra,I've already checked eno msh byakhod el course delwaaty)
+			  pre.prerequisite_course_id=course_id AND
+			  semester_code <> @current_semester_code AND --to ensure that the student is not taking the prereq now
+			  grade is not null and grade not in ('F','FF','FA') --to ensure that the prerequisite is taken AND PASSED (the is not null is extra,I've already checked eno msh byakhod el course delwaaty)
 	)
 
 	IF (@not_taken_prereq=0 AND @assigned_hours>=@credit_hours)
@@ -809,21 +812,19 @@ CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
 		UPDATE Request
 		SET status='accepted'
 		WHERE request_id=@RequestID AND
-			student_id=@studentID AND
-			advisor_id=@advisorID
+			student_id=@studentID 
 		UPDATE Student
 		SET assigned_hours=@assigned_hours-@credit_hours
 		WHERE student_id=@studentID
 		INSERT INTO Student_Instructor_Course_Take(student_id,course_id,semester_code)
-		VALUES (@studentID,@crs_id,@semesterCode);
+		VALUES (@studentID,@crs_id,@current_semester_code);
 		END
 	ELSE
 		BEGIN
 		UPDATE Request
 		SET status='rejected'
 		WHERE request_id=@RequestID AND
-			student_id=@studentID AND
-			advisor_id=@advisorID
+			student_id=@studentID 
 		END
 		
 	
@@ -985,51 +986,30 @@ CREATE PROC Procedures_StudentRegisterFirstMakeup
 	END
 GO
 
---2.3(JJ)
-
--- 	SELECT @countodd=count(*)
--- 	FROM Student_Instructor_Course_Take
--- 	WHERE student_id=@StudentID AND course_id=@courseID AND grade in ('F','FF','FA') AND semester_code LIKE 'W__'
-
--- 	SELECT @counteven=count(*)
--- 	FROM Student_Instructor_Course_Take
--- 	WHERE student_id=@StudentID AND course_id=@courseID AND grade in ('F','FF','FA') AND semester_code LIKE 'S__'
-
--- 	IF @countodd>2 OR @counteven>2
--- 		BEGIN
--- 		RETURN 0
--- 		END
-
-	
--- 	RETURN 1 -- Can u attend 2nd makeup if u failed the course 'F'
--- 	END --WHAT TO DO ABOUT REQUIRED COURSES
---I didn't delete it because there's comments written here nes'alhom and then n delete it
-
-GO
+--2.3(JJ)	
 create function FN_StudentCheckSMEligiability (@CourseID int, @StudentID int)
 	RETURNS BIT
 	AS
 	BEGIN
 	Declare 
-	@count INT,
-	@isElig BIT
+	@count INT
 
     IF EXISTS(
                 SELECT grade
                 FROM Student_Instructor_Course_Take
                 WHERE student_id=@StudentID AND course_id=@courseID AND 
-                (exam_type='First_makeup' OR exam_type='Normal') AND
+                (exam_type='First_makeup' OR exam_type='Normal') AND  --I'm selecting any record that shows that the student has passed this course
                 grade NOT IN ('F','FF','FA') AND grade IS NOT NULL
                 UNION
                 SELECT grade
                 FROM Student_Instructor_Course_Take
-                WHERE student_id=@StudentID AND course_id=@courseID AND exam_type='Second_makeup'
+                WHERE student_id=@StudentID AND course_id=@courseID AND exam_type='Second_makeup'--I'm selecting any record that shows that the student has already registered for a second makeup before
 
             )
         OR NOT EXISTS(
                 SELECT *
                 FROM Student_Instructor_Course_Take
-                WHERE student_id=@StudentID AND course_id=@courseID
+                WHERE student_id=@StudentID AND course_id=@courseID--checking if the student has never taken this course before
             )
     BEGIN
         RETURN 0;
@@ -1040,32 +1020,35 @@ create function FN_StudentCheckSMEligiability (@CourseID int, @StudentID int)
                 FROM Course
                 WHERE course_id=@CourseID AND semester % 2=0)
     BEGIN 
-        SELECT @count = count(*)
-        FROM Student_Instructor_Course_Take
-        WHERE course_id IN (semester_code like ('S__') OR semester_code like ('S__R2'))AND student_id = @studentID and grade in ('F','FF','FA') and exam_type = 'first_makeup'
-
+        SELECT @count = count(DISTINCT course_id)
+        from Student_Instructor_Course_Take c
+        WHERE (semester_code like ('S__') OR semester_code like ('S__R2')) AND student_id = @studentID 
+		AND (grade in ('F','FF','FA') or grade is null) and not exists(SELECT *			
+													FROM Student_Instructor_Course_Take s		
+													WHERE c.course_id = s.course_id AND s.grade NOT IN ('F','FF','FA') and s.grade is not null
+													AND @StudentID = s.student_id)
     END
 
+	ELSE 
+	BEGIN
+		SELECT @count = count(DISTINCT course_id)
+        from Student_Instructor_Course_Take c
+        WHERE (semester_code like ('W__') OR semester_code like ('S__R1')) AND student_id = @studentID 
+		AND (grade in ('F','FF','FA') or grade is null) and not exists(SELECT *
+													FROM Student_Instructor_Course_Take s
+													WHERE c.course_id = s.course_id AND s.grade NOT IN ('F','FF','FA')  and s.grade is not null
+													AND @StudentID = s.student_id)
+	END
 	
-
-	SELECT @count = count(*)
-	from Student_Instructor_Course_Take
-	WHERE semester_code like ('W__') AND student_id = @studentID and grade in ('F','FF','FA') and exam_type = 'first_makeup'
-
-	
-	if @count<=2 and @count<=2
-		BEGIN
-		set @isElig = 1
-		END
-	ELSE
-		BEGIN
-		set @isElig = 0
-		END
-	return @isElig
+	if @count>2
+	BEGIN
+		return 0
 	END
 
-GO
+	return 1
+END
 
+GO
 --2.3(KK)
 CREATE PROC Procedures_StudentRegisterSecondMakeup
 	@StudentID int, 
@@ -1094,19 +1077,31 @@ GO
 --2.3(LL)
 CREATE PROC Procedures_ViewRequiredCourses
 @StudentID int, 
-@Current_semester_code Varchar(40)--me7tagenha fe eh
+@Current_semester_code Varchar(40)
 AS
+	DECLARE @oddeven int;
+
+	IF (@Current_semester_code like 'S__' or @Current_semester_code like 'S__R2')
+	BEGIN
+		SET @oddeven =0
+	END
+	ELSE
+	BEGIN
+		SET @oddeven=1
+	END
+
 	SELECT c.* --rename column
 	FROM Course c INNER JOIN Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.student_id=@StudentID
-	WHERE  (dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) and s.grade in('F','FF','FA') 
-	
+	WHERE  (dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) and c.semester %2=@oddeven 
+	and (s.grade in('F','FF','FA') or s.grade is null)
+
 	UNION
 
 	SELECT c.*
 	FROM Course c , Student s
-	Where c.major = s.major and s.student_id = @StudentID and s.semester >c.semester and not exists( SELECT ce.*
-																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
-																				 WHERE ce.course_id = c.course_id
+	Where c.major = s.major and s.student_id = @StudentID and s.semester >c.semester  and c.semester %2=@oddeven  and not exists( SELECT *
+																				FROM Student_Instructor_Course_Take se 
+																				WHERE se.course_id = c.course_id AND se.student_id=@StudentID
 																				)
 
 
@@ -1116,21 +1111,31 @@ CREATE PROC Procedures_ViewOptionalCourse
 @StudentID int, 
 @Currentsemestercode Varchar(40)--me7tagenha fe eh
 AS
-	
+	DECLARE @oddeven int;
+	IF (@Currentsemestercode like 'S__' or @Currentsemestercode like 'S__R2')
+	BEGIN
+		SET @oddeven =0
+	END
+	ELSE
+	BEGIN
+		SET @oddeven=1
+	END
+
 	SELECT c.*
 	FROM Course c , Student s
-	where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and 
-	NOT EXISTS( SELECT ce.*
-	FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
-	WHERE ce.course_id = c.course_id AND NOT EXISTS(
+	where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and c.semester%2=@oddeven and 
+	NOT EXISTS( 
+		SELECT *
+		FROM Student_Instructor_Course_Take se 
+	WHERE se.course_id = c.course_id AND se.student_id=@StudentID ) AND 
+	NOT EXISTS(
 		SELECT p.prerequisite_course_id
-		FROM PreqCourse_course
-		WHERE ce.course_id=p.course_id
+		FROM PreqCourse_course p
+		WHERE c.course_id=p.course_id
 		EXCEPT 
-		SELECT pr.prerequisite_course_id
-		FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
-		WHERE ce.course_id=pre.course_id
-	)
+		SELECT sct.course_id
+		FROM Student_Instructor_Course_Take sct
+		WHERE sct.student_id=@StudentID
 	)
 	
 GO
@@ -1146,50 +1151,27 @@ AS
 	-- NOT EXISTS( SELECT ce.*
 	-- FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
 	-- WHERE ce.course_id = c.course_id AND EXISTS(
-	-- 	SELECT p.prerequisite_course_id
-	-- 	FROM PreqCourse_course
-	-- 	WHERE ce.course_id=p.course_id
-	-- 	EXCEPT 
-	-- 	SELECT pr.prerequisite_course_id
-	-- 	FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
-	-- 	WHERE ce.course_id=pre.course_id
+	--  SELECT p.prerequisite_course_id
+	--  FROM PreqCourse_course
+	--  WHERE ce.course_id=p.course_id
+	--  EXCEPT 
+	--  SELECT pr.prerequisite_course_id
+	--  FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
+	--  WHERE ce.course_id=pre.course_id
 	-- )
-	--)
+	-- )
 	SELECT c.*
-	FROM Course 
-	EXCEPT 
+		FROM Course c , Student s
+		where  c.major = s.major and s.student_id = @StudentID 
+	EXCEPT
 	(
-		SELECT c.*
-	FROM Course c , Student s
-	where  c.major = s.major and s.student_id = @StudentID and @Currentsemestercode<=c.semester and 
-	NOT EXISTS( SELECT ce.*
-	FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
-	WHERE ce.course_id = c.course_id AND NOT EXISTS(
-		SELECT p.prerequisite_course_id
-		FROM PreqCourse_course
-		WHERE ce.course_id=p.course_id
-		EXCEPT 
-		SELECT pr.prerequisite_course_id
-		FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
-		WHERE ce.course_id=pre.course_id
+	SELECT c.*
+	FROM Student_Instructor_Course_Take st INNER JOIN Course c ON c.course_id=st.course_id
+	WHERE student_id=@StudentID 
 	)
-	)
-	UNION
-	(
-		SELECT c.* --rename column
-	FROM Course c INNER JOIN Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.studentID=@StudentID
-	WHERE  (dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) and s.grade in('F','FF','FA') 
 	
-	UNION
 
-	SELECT c.*
-	FROM Course c , Student s
-	Where c.major = s.major and s.student_id = @StudentID and @Current_semester_code >c.semester and not exists( SELECT ce.*
-																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
-																				 WHERE ce.course_id = c.course_id
-																				)
-	)
-	)
+
 GO
 
 --2.3(OO)

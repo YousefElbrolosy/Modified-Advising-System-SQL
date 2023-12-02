@@ -1,13 +1,3 @@
-1. When we update the installments to account for the approved added credit hours,
-   which installment to add on? the upcoming one as in el wahda el baad el active delwaaty?
-
-   Lazem a check ala eno upcoming 
-
-2. 
-    A course is considered missed if the student failed/didn’t attend the course
-    ^^^msh haaraf a check whenever a student registers because I still don't have an ID (moreover msh haaraf yeb'a fee instance l 
-       student_course_instructot_take mengheir mayeb'a fe student instance ashan el foreign key)
-
 3. You need to check the request type in 2.3.W and 2.3.Y 
     ^^^^ eh syntax el type?
 
@@ -25,3 +15,9 @@ check 2.3 NN (missing courses implementation)(el required/optional courses are s
 If so, el insertions el nezlet kolohom aandohom acquired hours < 157 fa msh mafroud wla student yeb'a eligible for a grad plan)
 
 -When we check for prerequisite courses, do we check that they are passed wala law howa akhado bas se'to its okay to request a course el madda el se'etha heya ml prerequisite btaato
+
+
+
+
+************************
+Do we check when checking if prerequisites are taken or not en el grade el feehom msh null w nmsh FA

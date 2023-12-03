@@ -60,14 +60,14 @@ Create Proc CreateAllTables
 		semester int NOT NULL,--NOT NULL BASED ON (2.3-A)
 		acquired_hours int,--NULL BASED ON (2.3-A)
 		assigned_hours int,--NULL BASED ON (2.3-A) and Ashan mawgouda f M1
-		advisor_id int CONSTRAINT fk4 Foreign Key references Advisor, --NULL BASED ON (2.3-A)
+		advisor_id int CONSTRAINT fk4 Foreign Key references Advisor ON DELETE SET NULL ON UPDATE CASCADE, --NULL BASED ON (2.3-A)
 		CHECK (gpa BETWEEN 0.7 AND 5),--Based on common questions posted on CMS
         CHECK (assigned_hours<=34),--Based on common questions posted on CMS
         CHECK (acquired_hours>34)--Based on common questions posted on CMS
 	);
 	--INSERT VALUES IN (2.3-BB)
 	Create Table Student_Phone (--NO PROBLEMS HERE
-		student_id int CONSTRAINT fk5 Foreign Key references Student, 
+		student_id int CONSTRAINT fk5 Foreign Key references Student ON DELETE CASCADE ON UPDATE CASCADE, 
 		phone_number varchar(40),
 		Primary Key(student_id,phone_number)
 	);
@@ -99,16 +99,22 @@ Create Proc CreateAllTables
 		course_id int CONSTRAINT fk8 FOREIGN KEY references Course
 		ON DELETE CASCADE
 		ON UPDATE CASCADE, 
-		instructor_id int CONSTRAINT fk9 FOREIGN KEY references Instructor,
+		instructor_id int CONSTRAINT fk9 FOREIGN KEY references Instructor
+		ON DELETE CASCADE
+		ON UPDATE CASCADE,
 		Primary Key (course_id,instructor_id)
 	);
 	--INSERT VALUES IN (2.3-I)
 	Create Table Student_Instructor_Course_Take (--NO PROBLEMS HERE
-		student_id int CONSTRAINT fk10 Foreign Key references Student, 
+		student_id int CONSTRAINT fk10 Foreign Key references Student
+		ON DELETE CASCADE
+		ON UPDATE CASCADE, 
 		course_id int CONSTRAINT fk11 Foreign Key references Course
 		ON DELETE CASCADE
 		ON UPDATE CASCADE, 
-		instructor_id int CONSTRAINT fk12 Foreign Key references Instructor, 
+		instructor_id int CONSTRAINT fk12 Foreign Key references Instructor
+		ON DELETE SET NULL
+		ON UPDATE CASCADE, 
 		semester_code varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-I)
 		exam_type varchar(40) DEFAULT 'Normal',--DEFAULT VALUE BASED ON M2 DESC 
 		grade varchar(40),--NULL BASED ON (2.3-I) 
@@ -126,7 +132,9 @@ Create Proc CreateAllTables
 		course_id int CONSTRAINT fk13 FOREIGN KEY references Course
 		ON DELETE CASCADE
 		ON UPDATE CASCADE, 
-		semester_code varchar(40) CONSTRAINT fk14 Foreign Key references Semester,
+		semester_code varchar(40) CONSTRAINT fk14 Foreign Key references Semester
+		ON DELETE CASCADE
+		ON UPDATE CASCADE,
 		Primary Key(course_id,semester_code)
 	);
 	--INSERT VALUES IN (NO IDEA) // INSTRUCTOR/COURSE In (2.3-H)
@@ -138,7 +146,9 @@ Create Proc CreateAllTables
 		course_id int CONSTRAINT fk15 Foreign Key references Course 
 		ON UPDATE CASCADE
 		ON DELETE SET NULL,-- NULL BASED ON (2.3-H) 
-		instructor_id int CONSTRAINT fk16 Foreign Key references Instructor -- NULL BASED ON (2.3-H)
+		instructor_id int CONSTRAINT fk16 Foreign Key references Instructor
+		ON UPDATE CASCADE
+		ON DELETE SET NULL -- NULL BASED ON (2.3-H)
 	);
 	--INSERT VALUES IN (2.3-R)
 	Create Table Graduation_Plan (--NO PROBLEMS HERE
@@ -146,8 +156,10 @@ Create Proc CreateAllTables
 		semester_code varchar(40), 
 		semester_credit_hours int NOT NULL,--NOT NULL BASED ON (2.3-R) 
 		expected_grad_date date NOT NULL,--NOT NULL BASED ON (2.3-R)
-		advisor_id int CONSTRAINT fk17 FOREIGN KEY references Advisor NOT NULL,--NOT NULL BASED ON (2.3-R)
-		student_id int CONSTRAINT fk18 FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON (2.3-R)
+		advisor_id int CONSTRAINT fk17 FOREIGN KEY references Advisor
+		ON UPDATE CASCADE
+		ON DELETE SET NULL,
+		student_id int NOT NULL CONSTRAINT fk18 FOREIGN KEY references Student, --NOT NULL BASED ON (2.3-R)
 		PRIMARY KEY (plan_id , semester_code)
 	);
 	--INSERT VALUES IN (2.3-S) // DELETE VALUES (2.3-U)
@@ -157,6 +169,8 @@ Create Proc CreateAllTables
 		course_id int,
 		PRIMARY KEY(plan_id, semester_code, course_id),
 		CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
+		ON UPDATE CASCADE
+		ON DELETE CASCADE
 	);
 	--INSERT VALUES IN (2.3-DD // 2.3-EE)
 	Create Table Request (--ADVISOR --> NULL/NOT NULL
@@ -165,8 +179,10 @@ Create Proc CreateAllTables
 		comment varchar(40) NOT NULL,-- NOT NULL BASED ON  (2.3-DD // 2.3-EE)
 		status varchar(40) DEFAULT 'pending',--DEFAULT VALUE BASED ON M2 DESC 
 		credit_hours int,--NULL BASED ON (2.3-DD // 2.3-EE)
-		student_id int CONSTRAINT fk19 FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON  (2.3-DD // 2.3-EE) 
-		advisor_id int CONSTRAINT fk20 FOREIGN KEY references Advisor NOT NULL,--NULL UNTIL ADVISOR RESPONDS? OR PUT THE CURRENT STUDENT'S ADVISOR 
+		student_id int NOT NULL CONSTRAINT fk19 FOREIGN KEY references Student --NOT NULL BASED ON  (2.3-DD // 2.3-EE) 
+		ON UPDATE CASCADE
+		ON DELETE CASCADE,
+		advisor_id int CONSTRAINT fk20 FOREIGN KEY references Advisor,--NULL UNTIL ADVISOR RESPONDS? OR PUT THE CURRENT STUDENT'S ADVISOR 
 		course_id int CONSTRAINT fk25 FOREIGN KEY references Course 
 		ON UPDATE CASCADE
 		ON DELETE CASCADE,--NULL BASED ON (2.3-DD // 2.3-EE)
@@ -187,7 +203,9 @@ Create Proc CreateAllTables
 		exam_id int CONSTRAINT fk2 FOREIGN KEY references MakeUp_Exam
 		ON DELETE CASCADE
 		ON UPDATE CASCADE, 
-		student_id int CONSTRAINT fk22 FOREIGN KEY references Student, 
+		student_id int CONSTRAINT fk22 FOREIGN KEY references Student
+		ON DELETE CASCADE
+		ON UPDATE CASCADE, 
 		course_id int NOT NULL,--NOT NULL BASED ON (2.3-II // 2.3-KK) 
 		PRIMARY KEY(exam_id,student_id)
 	);
@@ -200,13 +218,19 @@ Create Proc CreateAllTables
 		status varchar(40) DEFAULT 'notPaid',--DEFAULT VALUE BASED ON M2 DESC 
 		fund_percentage decimal(5,2) NOT NULL,
 		start_date DATETIME NOT NULL,
-		student_id int CONSTRAINT fk23 FOREIGN KEY references Student NOT NULL, 
-		semester_code varchar(40) CONSTRAINT fk24 FOREIGN KEY references Semester NOT NULL, 
+		student_id int NOT NULL CONSTRAINT fk23 FOREIGN KEY references Student
+		ON DELETE CASCADE
+		ON UPDATE CASCADE, 
+		semester_code varchar(40) NOT NULL CONSTRAINT fk24 FOREIGN KEY references Semester 
+		ON DELETE CASCADE
+		ON UPDATE CASCADE, 
 		CHECK(status IN ('notPaid','Paid'))--BASED ON M2 DESC
 	);
 	--INSERT VALUES IN (2.3-L)
 	Create Table Installment (
-		payment_id int CONSTRAINT fk3 FOREIGN KEY references Payment, 
+		payment_id int CONSTRAINT fk3 FOREIGN KEY references Payment
+		ON DELETE CASCADE
+		ON UPDATE CASCADE, 
 		deadline datetime,--AS DATEADD(month, 1, start_date),--JUST COMMENT: heya sa7 bas it is not explicitly stated fel schema fa can we assume enaha derived?
 		amount int NOT NULL,
 		status varchar(40) DEFAULT 'notPaid', --DEFAULT VALUE BASED ON M2 DESC 
@@ -306,20 +330,20 @@ AS
     TRUNCATE TABLE Advisor
 
 	ALTER TABLE GradPlan_Course
-	ADD CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
+	ADD CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan ON UPDATE CASCADE ON DELETE CASCADE
 
 	ALTER TABLE Exam_Student
 	ADD CONSTRAINT fk2  FOREIGN KEY(exam_id) references MakeUp_Exam ON DELETE CASCADE ON UPDATE CASCADE,
-		CONSTRAINT fk22 FOREIGN KEY(student_id) references Student 
+		CONSTRAINT fk22 FOREIGN KEY(student_id) references Student ON DELETE CASCADE ON UPDATE CASCADE
 
 	ALTER TABLE Installment
-	ADD CONSTRAINT fk3 FOREIGN KEY(payment_id) references Payment
+	ADD CONSTRAINT fk3 FOREIGN KEY(payment_id) references Payment ON DELETE CASCADE ON UPDATE CASCADE
 
 	ALTER TABLE Student
-	ADD CONSTRAINT fk4 FOREIGN KEY(advisor_id) references Advisor
+	ADD CONSTRAINT fk4 FOREIGN KEY(advisor_id) references Advisor ON DELETE SET NULL ON UPDATE CASCADE
 
 	ALTER TABLE Student_Phone
-	ADD CONSTRAINT fk5 FOREIGN KEY(student_id) references Student
+	ADD CONSTRAINT fk5 FOREIGN KEY(student_id) references Student ON DELETE CASCADE ON UPDATE CASCADE
 
 	ALTER TABLE PreqCourse_course
 	ADD CONSTRAINT fk6 FOREIGN KEY(prerequisite_course_id) references Course,
@@ -327,27 +351,27 @@ AS
 
 	ALTER TABLE Instructor_Course
 	ADD CONSTRAINT fk8 FOREIGN KEY(course_id) references Course ON DELETE CASCADE ON UPDATE CASCADE,
-		CONSTRAINT fk9 FOREIGN KEY(instructor_id) references Instructor
+		CONSTRAINT fk9 FOREIGN KEY(instructor_id) references Instructor ON DELETE CASCADE ON UPDATE CASCADE
 
 	ALTER TABLE Student_Instructor_Course_Take
-	ADD CONSTRAINT fk10 FOREIGN KEY(student_id) references Student,
+	ADD CONSTRAINT fk10 FOREIGN KEY(student_id) references Student ON DELETE CASCADE ON UPDATE CASCADE,
 		CONSTRAINT fk11 FOREIGN KEY(course_id) references Course ON DELETE CASCADE ON UPDATE CASCADE,
-		CONSTRAINT fk12 FOREIGN KEY(instructor_id) references Instructor
+		CONSTRAINT fk12 FOREIGN KEY(instructor_id) references Instructor ON DELETE CASCADE ON UPDATE CASCADE
 
 	ALTER TABLE Course_Semester
 	ADD CONSTRAINT fk13 FOREIGN KEY(course_id) references Course ON DELETE CASCADE ON UPDATE CASCADE,
-		CONSTRAINT fk14 FOREIGN KEY(semester_code) references Semester
+		CONSTRAINT fk14 FOREIGN KEY(semester_code) references Semester ON DELETE CASCADE ON UPDATE CASCADE
 	
 	ALTER TABLE Slot
 	ADD CONSTRAINT fk15 FOREIGN KEY(course_id) references Course ON DELETE SET NULL ON UPDATE CASCADE, 
-		CONSTRAINT fk16 FOREIGN KEY(instructor_id) references Instructor 
+		CONSTRAINT fk16 FOREIGN KEY(instructor_id) references Instructor ON UPDATE CASCADE ON DELETE SET NULL
 
 	ALTER TABLE Graduation_Plan
-	ADD CONSTRAINT fk17 FOREIGN KEY(advisor_id) references Advisor,
+	ADD CONSTRAINT fk17 FOREIGN KEY(advisor_id) references Advisor ON UPDATE CASCADE ON DELETE SET NULL,
 		CONSTRAINT fk18 FOREIGN KEY(student_id) references Student
 
 	ALTER TABLE Request
-	ADD	CONSTRAINT fk19 FOREIGN KEY(student_id) references Student,
+	ADD	CONSTRAINT fk19 FOREIGN KEY(student_id) references Student ON UPDATE CASCADE ON DELETE CASCADE,
 		CONSTRAINT fk20 FOREIGN KEY(advisor_id) references Advisor,
 		CONSTRAINT fk25 FOREIGN KEY(course_id) references Course ON DELETE CASCADE ON UPDATE CASCADE
 
@@ -355,8 +379,8 @@ AS
 	ADD CONSTRAINT fk21 FOREIGN KEY(course_id) references Course ON DELETE CASCADE ON UPDATE CASCADE
 
 	ALTER TABLE Payment
-	ADD	CONSTRAINT fk23 FOREIGN KEY(student_id) references Student,
-		CONSTRAINT fk24 FOREIGN KEY(semester_code) references Semester
+	ADD	CONSTRAINT fk23 FOREIGN KEY(student_id) references Student ON DELETE CASCADE ON UPDATE CASCADE,
+		CONSTRAINT fk24 FOREIGN KEY(semester_code) references Semester ON DELETE CASCADE ON UPDATE CASCADE
 		
 GO
 ---------------------------------------------------------------------------------------

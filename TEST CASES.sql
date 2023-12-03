@@ -1,5 +1,6 @@
 ﻿
-
+DROP PROC CreateAllTables
+DROP PROC clearAllTables
 EXEC CreateAllTables
 
 EXEC DropAllTables

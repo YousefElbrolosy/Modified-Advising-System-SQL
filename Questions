@@ -1,0 +1,23 @@
+3. You need to check the request type in 2.3.W and 2.3.Y 
+    ^^^^ eh syntax el type?
+
+--WHAT TO DO ABOUT REQUIRED COURSES
+
+-------------------------------------
+3ady azawed primary key exam type lel student_course_instructor_take?
+
+Do I have to check for the offering of the course when viewing optional/required courses?(ie laze at'aked eno is_offered=1?)
+
+check 2.3 NN (missing courses implementation)(el required/optional courses are subset of the missing courses)
+
+
+-->Check when creating graduation plan that acquired hours are greater that 157 (hal ahot check constraint in the graduation table?
+If so, el insertions el nezlet kolohom aandohom acquired hours < 157 fa msh mafroud wla student yeb'a eligible for a grad plan)
+
+-When we check for prerequisite courses, do we check that they are passed wala law howa akhado bas se'to its okay to request a course el madda el se'etha heya ml prerequisite btaato
+
+
+
+
+************************
+Do we check when checking if prerequisites are taken or not en el grade el feehom msh null w nmsh FA

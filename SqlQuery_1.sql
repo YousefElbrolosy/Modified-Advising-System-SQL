@@ -26,7 +26,7 @@
 --^^DO I HAVE TO CHECK THE ABOVE POINT
 ---------------------------------------------------------------------------------------
 --2.1 (1) NO PROBLEMS HERE
-CREATE DATABASE Advising_Team
+CREATE DATABASE Advising_Team1
 Go
 USE Advising_Team
 GO
@@ -133,7 +133,9 @@ Create Proc CreateAllTables
 		day varchar(40) NOT NULL,--IN(Sunday,Monday,...) 
 		time varchar(40) NOT NULL,--IN(1st,2nd,3rd,...) 
 		location varchar(40) NOT NULL, 
-		course_id int CONSTRAINT fk15 Foreign Key references Course,-- NULL BASED ON (2.3-H) 
+		course_id int CONSTRAINT fk15 Foreign Key references Course 
+		ON UPDATE CASCADE
+		ON DELETE SET NULL,-- NULL BASED ON (2.3-H) 
 		instructor_id int CONSTRAINT fk16 Foreign Key references Instructor -- NULL BASED ON (2.3-H)
 	);
 	--INSERT VALUES IN (2.3-R)
@@ -150,9 +152,7 @@ Create Proc CreateAllTables
 	Create Table GradPlan_Course (--NO PROBLEMS HERE
 		plan_id int, 
 		semester_code varchar(40), 
-		course_id int CONSTRAINT fk25 FOREIGN KEY references Course
-		ON DELETE CASCADE
-		ON UPDATE CASCADE,
+		course_id int,
 		PRIMARY KEY(plan_id, semester_code, course_id),
 		CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
 	);
@@ -165,7 +165,9 @@ Create Proc CreateAllTables
 		credit_hours int,--NULL BASED ON (2.3-DD // 2.3-EE)
 		student_id int CONSTRAINT fk19 FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON  (2.3-DD // 2.3-EE) 
 		advisor_id int CONSTRAINT fk20 FOREIGN KEY references Advisor NOT NULL,--NULL UNTIL ADVISOR RESPONDS? OR PUT THE CURRENT STUDENT'S ADVISOR 
-		course_id int,--NULL BASED ON (2.3-DD // 2.3-EE)
+		course_id int CONSTRAINT fk25 FOREIGN KEY references Course 
+		ON UPDATE CASCADE
+		ON DELETE CASCADE,--NULL BASED ON (2.3-DD // 2.3-EE)
 		CHECK (status IN ('pending','accepted','approved','rejected'))--BASED ON M2 DESC 
 	);
 	--INSERT VALUES IN (2.3-K)
@@ -241,7 +243,7 @@ CREATE PROCEDURE clearAllTables
 AS	
 
 	ALTER TABLE GradPlan_Course
-	Drop fk1,fk25
+	Drop fk1
 
 	ALTER TABLE Exam_Student
 	DROP fk2,fk22
@@ -274,7 +276,7 @@ AS
 	DROP fk17,fk18
 
 	ALTER TABLE Request
-	DROP fk19,fk20
+	DROP fk19,fk20,fk25
 	
 	ALTER TABLE MakeUp_Exam
 	DROP fk21
@@ -302,8 +304,7 @@ AS
     TRUNCATE TABLE Advisor
 
 	ALTER TABLE GradPlan_Course
-	ADD CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan,
-		CONSTRAINT fk25 FOREIGN KEY(course_id) references Course
+	ADD CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
 
 	ALTER TABLE Exam_Student
 	ADD CONSTRAINT fk2  FOREIGN KEY(exam_id) references MakeUp_Exam,
@@ -345,7 +346,8 @@ AS
 
 	ALTER TABLE Request
 	ADD	CONSTRAINT fk19 FOREIGN KEY(student_id) references Student,
-		CONSTRAINT fk20 FOREIGN KEY(advisor_id) references Advisor
+		CONSTRAINT fk20 FOREIGN KEY(advisor_id) references Advisor,
+		CONSTRAINT fk25 FOREIGN KEY(course_id) references Course
 
 	ALTER TABLE MakeUp_Exam
 	ADD CONSTRAINT fk21 FOREIGN KEY(course_id) references Course
@@ -484,8 +486,7 @@ GO
 -- 2.3(E) LIST ALL STUDENTS or Students w Advisors (in other words inner or outer)/COLUMNS
 CREATE PROCEDURE AdminListStudentsWithAdvisors
 	AS
-		SELECT s.f_name+' '+s.l_name AS student_name ,A.name as advisor_name--should i get all info wla names bs?
-		-- I THINK LEFT OUTER JOIN HERE IS TRIVIAL BECAUSE THERE WONT
+		SELECT s.student_id,s.f_name +' '+s.l_name as 'Student Name',s.gpa,s.major,s.email as'Student Email',s.faculty,s.financial_status,s.semester,s.acquired_hours,s.assigned_hours,a.advisor_id,a.name AS 'Advisor name',a.email as 'Advisor Email',a.office
 		FROM Student s LEFT OUTER JOIN Advisor a ON s.advisor_id = a.advisor_id
 
 GO

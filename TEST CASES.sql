@@ -1,4 +1,6 @@
-﻿EXEC CreateAllTables
+﻿
+
+EXEC CreateAllTables
 
 EXEC DropAllTables
 
@@ -65,6 +67,32 @@ VALUES(1,2),
 	  (6,7),
 	  (8,9)
 
+INSERT INTO Course_Semester
+VALUES(1,'W23'),
+	  (3,'W23'),
+	  (5,'W23'),
+	  (7,'W23'),
+	  (8,'W23'),
+	  (10,'W23'),
+	  (2,'S23'),
+	  (4,'S23'),
+	  (6,'S23'),
+	  (9,'S23'),
+	  (1,'W24'),
+	  (3,'W24'),
+	  (5,'W24'),
+	  (7,'W24'),
+	  (8,'W24'),
+	  (10,'W24'),
+	  (2,'S24'),
+	  (4,'S24'),
+	  (6,'S24'),
+	  (9,'S24'),
+	  (1,'S23R1'),
+	  (2,'S23R2'),
+	  (7,'S24R1'),
+	  (6,'S24R2')
+
 --2.3(H)
 INSERT INTO Slot
 	VALUES('Saturday','FIRST','C5-120',NULL,NULL),
@@ -87,6 +115,77 @@ INSERT INTO Slot
 		  ('Sunday','FIFTH','C5-120',NULL,NULL),
 		  ('Monday','FIFTH','C5-120',NULL,NULL),
 		  ('Thursday','FIFTH','C5-120',NULL,NULL)
-EXEC Procedures_AdminLinkInstructor
+
+INSERT INTO Instructor
+	VALUES('SLIM','E','ENG','O'),
+		  ('MERVAT','E','ENG','O'),
+		  ('RAMY','E','ENG','O'),
+		  ('HANY','E','ENG','O')
+
+INSERT INTO Instructor_Course
+	VALUES(1,1),
+		  (2,1),
+		  (3,1),
+		  (4,1),
+		  (5,4),
+		  (6,3),
+		  (7,3),
+		  (8,2),
+		  (9,2),
+		  (10,1)
+
+EXEC Procedures_AdminLinkInstructor 1,1,1
+EXEC Procedures_AdminLinkInstructor 1,2,2
+EXEC Procedures_AdminLinkInstructor 1,3,3
+
+--2.3(I)
+EXEC Procedures_AdminLinkStudent 1,1,1,'W23'
+EXEC Procedures_AdminLinkStudent 1,1,3,'W23'
 
 
+--2.3(J)
+EXEC Procedures_AdminLinkStudentToAdvisor 1,1
+
+--2.3(K)
+
+--2.3(L)
+insert into Payment VALUES (10000,'2024-06-12',4,'notPaid',20,'2023-12-3',5,'W24') 
+insert into Payment VALUES (5000,'2024-01-12',2,'notPaid',20,'2023-12-3',2,'W24') 
+insert into Payment VALUES (5000,'2024-04-12',3,'notPaid',50,'2024-1-12',4,'W24') 
+insert into Payment VALUES (50000,'2024-04-12',3,'notPaid',50,'2024-1-12',3,'W24') 
+insert into Payment VALUES (50000,'2024-04-12',3,'Paid',50,'2024-1-12',1,'W24')
+EXEC Procedures_AdminIssueInstallment 5
+EXEC Procedures_AdminIssueInstallment 4
+select * From Payment
+SELECT * FROM Installment
+
+--2.3(M)
+
+EXEC Procedures_AdminDeleteCourse 3
+
+--------------------------------------------------------------------------------------
+--RECHECK (hagat momken nes2l 3aleha keda keda hantest kolo men el awl): 
+-- (*-->NOT THAT IMPORTANT // **-->MABEN EL ETNEN // ***-->VERY VERY IMPORTANT)
+--ALL 2.2* (Makeup details masln show them in different columns 3ady , omar mas3dneesh awy feeha bas aal mafeesh 1 answer shoof eh el yenaseb t7oto)
+--2.3(A)** (Students registeration da bykoon hoa alr student 3ando attributes w by register le advising fa mesh ha calculate el gpa/ash/aq 3alshan malhash lazma ana el dakhely advising fa ignore it w kaman el FAQ aligns m3 kalam omar)
+--2.3(C)* (Same as 2.2)
+--2.3(D)* (Same as 2.2)
+--2.3(E)* (nseit as2al de)
+--2.3(L)** (7ad yet2kd men el 3amlto w 3ayzeen nzwd el number of installments w nshelha men el derived attributes)
+--2.3(N)*** (tamam zabtanaha)
+--2.3(O)* (Same as 2.2)
+--2.3(P)*** (de Mariam kanet ayla delete el slot omar aal la zy manto 3amleen momken nes2l tany BAS el FAQ bey2olk mat3mlsh check be is offered w check be TABLE Course_Semster fa hanghayr feeha bardo)
+--2.3(V)* (nafs kalam 2.2) <--we2ft hena
+--ALL 2.2*
+--2.3(A)**
+--2.3(C)*
+--2.3(D)*
+--2.3(E)*
+--2.3(L)**
+--2.3(N)***
+--2.3(O)*
+--2.3(P)***
+--2.3(V)* <--we2ft hena
+
+--An advising student must have at least one missed course. A course is considered missed if the student failed/didn’t attend the course
+--^^DO I HAVE TO CHECK THE ABOVE POINT

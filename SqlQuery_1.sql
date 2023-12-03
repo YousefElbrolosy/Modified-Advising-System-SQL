@@ -26,9 +26,9 @@
 --^^DO I HAVE TO CHECK THE ABOVE POINT
 ---------------------------------------------------------------------------------------
 --2.1 (1) NO PROBLEMS HERE
-CREATE DATABASE Advising_TeamTEST990
+CREATE DATABASE Advising_Team_61
 Go
-USE Advising_TeamTEST990
+USE Advising_Team_61
 GO
 
 --2.1 (2)
@@ -616,7 +616,7 @@ GO
 --2.3(O) COLUMNS
 CREATE VIEW all_Pending_Requests
 	AS
-		SELECT r.request_id,r.type,r.comment,r.credit_hours,r.course_id, s.f_name+' '+s.l_name AS Student_name,a.name
+		SELECT r.request_id,r.type,r.comment,r.credit_hours,r.course_id, s.f_name+' '+s.l_name AS Student_name,a.name as 'Advisor Name'
 		FROM Request r INNER JOIN Student s ON r.student_id=s.student_id 
 					   INNER JOIN Advisor a ON r.advisor_id=a.advisor_id
 		WHERE r.status='pending'
@@ -689,9 +689,9 @@ CREATE PROC Procedures_AdvisorAddCourseGP
 		INSERT INTO GradPlan_Course
 		VALUES(@plan_id,@Semester_code,@course_id)
 
-		--UPDATE Graduation_Plan
-		--SET semester_credit_hours=semester_credit_hours+@ch
-		--WHERE plan_id=@plan_id AND semester_code=@Semester_code 
+		UPDATE Graduation_Plan
+		SET semester_credit_hours=semester_credit_hours+@ch
+		WHERE plan_id=@plan_id AND semester_code=@Semester_code 
 GO
 
 --2.3(T) NO PROBLEM HERE

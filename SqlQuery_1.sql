@@ -1,30 +1,4 @@
-﻿--------------------------------------------------------------------------------------
---RECHECK (hagat momken nes2l 3aleha keda keda hantest kolo men el awl): 
--- (*-->NOT THAT IMPORTANT // **-->MABEN EL ETNEN // ***-->VERY VERY IMPORTANT)
---ALL 2.2* (Makeup details masln show them in different columns 3ady , omar mas3dneesh awy feeha bas aal mafeesh 1 answer shoof eh el yenaseb t7oto)
---2.3(A)** (Students registeration da bykoon hoa alr student 3ando attributes w by register le advising fa mesh ha calculate el gpa/ash/aq 3alshan malhash lazma ana el dakhely advising fa ignore it w kaman el FAQ aligns m3 kalam omar)
---2.3(C)* (Same as 2.2)
---2.3(D)* (Same as 2.2)
---2.3(E)* (nseit as2al de)
---2.3(L)** (7ad yet2kd men el 3amlto w 3ayzeen nzwd el number of installments w nshelha men el derived attributes)
---2.3(N)*** (tamam zabtanaha)
---2.3(O)* (Same as 2.2)
---2.3(P)*** (de Mariam kanet ayla delete el slot omar aal la zy manto 3amleen momken nes2l tany BAS el FAQ bey2olk mat3mlsh check be is offered w check be TABLE Course_Semster fa hanghayr feeha bardo)
---2.3(V)* (nafs kalam 2.2) <--we2ft hena
---ALL 2.2*
---2.3(A)**
---2.3(C)*
---2.3(D)*
---2.3(E)*
---2.3(L)**
---2.3(N)***
---2.3(O)*
---2.3(P)***
---2.3(V)* <--we2ft hena
-
---An advising student must have at least one missed course. A course is considered missed if the student failed/didn’t attend the course
---^^DO I HAVE TO CHECK THE ABOVE POINT
----------------------------------------------------------------------------------------
+﻿---------------------------------------------------------------------------------------
 --2.1 (1) NO PROBLEMS HERE
 CREATE DATABASE Advising_Team_61
 Go
@@ -32,10 +6,6 @@ USE Advising_Team_61
 GO
 
 --2.1 (2)
---TODO:
---1)THINK OF MORE CONSTRAINTS
---2)THINK OF UPDATE/DELETE OPTIONS IN FOREIGN KEY
-
 Create Proc CreateAllTables 
 	As
 	--INSERT VALUES IN (2.3-B)
@@ -766,19 +736,20 @@ CREATE PROC Procedures_AdvisorApproveRejectCHRequest
 		@credit_hrs_req INT,
 		@studentID INT,
 		@gpa decimal(3,2),
-		@assignedhrs INT
-		--@tot_hours_curr_sem INT
+		@assignedhrs INT,
+		@tot_hours_curr_sem INT
 
 		SELECT @credit_hrs_req=r.credit_hours, @studentID=r.student_id, @gpa=s.gpa,@assignedhrs=s.assigned_hours
 		FROM Request r INNER JOIN student s ON r.student_id=s.student_id
 		WHERE r.request_id=@RequestID
 
-		--SELECT @tot_hours_curr_sem= SUM(c.credit_hours)
-		--FROM Student_Instructor_Course_Take st INNER JOIN Course c ON st.course_id=c.course_id
-		--WHERE st.student_id=@studentID AND
-		--st.semester_code=@Current_semester_code
-
-		IF (@gpa<=3.7 AND @credit_hrs_req<=3 AND (@assignedhrs+@credit_hrs_req<=34))--+@tot_hours_curr_sem
+		SELECT @tot_hours_curr_sem= SUM(c.credit_hours)
+		FROM Student_Instructor_Course_Take st INNER JOIN Course c ON st.course_id=c.course_id
+		WHERE st.student_id=@studentID AND
+		st.semester_code=@Current_semester_code
+		--SOME TAS SAID that we should account for the credit hours taken by the students in the current semester and some said no and use the assigned hours only instead
+		--ALL TAS agreed en both are correct
+		IF (@gpa<=3.7 AND @credit_hrs_req<=3 AND (@assignedhrs+@credit_hrs_req+@tot_hours_curr_sem<=34))
 			BEGIN 
 				UPDATE Request
 				SET status='accepted'

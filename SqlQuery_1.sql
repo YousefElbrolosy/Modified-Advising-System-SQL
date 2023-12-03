@@ -564,17 +564,16 @@ CREATE PROC Procedures_AdminIssueInstallment
 	AS
 		DECLARE @n int,
 				@start_date date,
-			    @amountperinstallment int,
-				@status varchar(40)
+			    @amountperinstallment int
 
-		SELECT @n=n_installments ,@amountperinstallment=amount/n_installments, @start_date=start_date,@status=status
+		SELECT @n=n_installments ,@amountperinstallment=amount/n_installments, @start_date=start_date
 		FROM Payment
 		WHERE payment_id=@payment_ID
 
 		WHILE @n>0
 			BEGIN
-				INSERT INTO Installment(payment_id,amount,start_date,deadline,status)
-				VALUES (@payment_ID,@amountperinstallment,@start_date,DATEADD(month, 1, @start_date),@status)
+				INSERT INTO Installment(payment_id,amount,start_date,deadline)
+				VALUES (@payment_ID,@amountperinstallment,@start_date,DATEADD(month, 1, @start_date))
 				SET @start_date = DATEADD(month, 1, @start_date)
 				SET @n = @n-1
 			END
@@ -675,23 +674,18 @@ CREATE PROC Procedures_AdvisorAddCourseGP
 	@course_name varchar(40)
 	AS
 		DECLARE @plan_id INT,
-			    @course_id INT,
-				@ch INT
+			    @course_id INT
 
 		SELECT @plan_id=plan_id
 		FROM Graduation_Plan
 		WHERE student_id=@student_id AND semester_code=@Semester_code
 		
-		SELECT @course_id=course_id,@ch=credit_hours
+		SELECT @course_id=course_id
 		FROM Course
 		WHERE name=@course_name
 		
 		INSERT INTO GradPlan_Course
 		VALUES(@plan_id,@Semester_code,@course_id)
-
-		UPDATE Graduation_Plan
-		SET semester_credit_hours=semester_credit_hours+@ch
-		WHERE plan_id=@plan_id AND semester_code=@Semester_code 
 GO
 
 --2.3(T) NO PROBLEM HERE

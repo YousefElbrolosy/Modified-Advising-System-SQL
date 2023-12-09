@@ -1,10 +1,22 @@
-﻿--GENERAL QUESTIONS:
---1)SOME TABLES DOES NOT HAVE INSERT PROCEDURES (PREQCOURSES , INSTRUCTOR , INSTRUCTOR_COURSE , COURSE_SEMESTER , SLOT , GradPlan_Course)
---2)WHY IS THERE SOME PROCEDURES THAT CAN BE DONE USING VIEWS
---3)CAN WE HAVE DERIVED ATTRIBUTES THAT IS NOT STATED IN THE SCHEMA AND VICE VERSA
+﻿--------------------------------------------------------------------------------------
+--RECHECK (hagat momken nes2l 3aleha keda keda hantest kolo men el awl): 
+-- (*-->NOT THAT IMPORTANT // **-->MABEN EL ETNEN // ***-->VERY VERY IMPORTANT)
+--ALL 2.2* (Makeup details masln show them in different columns 3ady , omar mas3dneesh awy feeha bas aal mafeesh 1 answer shoof eh el yenaseb t7oto)
+--2.3(A)** (Students registeration da bykoon hoa alr student 3ando attributes w by register le advising fa mesh ha calculate el gpa/ash/aq 3alshan malhash lazma ana el dakhely advising fa ignore it w kaman el FAQ aligns m3 kalam omar)
+--2.3(C)* (Same as 2.2)
+--2.3(D)* (Same as 2.2)
+--2.3(E)* (nseit as2al de)
+--2.3(L)** (7ad yet2kd men el 3amlto w 3ayzeen nzwd el number of installments w nshelha men el derived attributes)
+--2.3(N)*** (tamam zabtanaha)
+--2.3(O)* (Same as 2.2)
+--2.3(P)*** (de Mariam kanet ayla delete el slot omar aal la zy manto 3amleen momken nes2l tany BAS el FAQ bey2olk mat3mlsh check be is offered w check be TABLE Course_Semster fa hanghayr feeha bardo)
+--2.3(V)* (nafs kalam 2.2) <--we2ft hena
+---------------------------------------------------------------------------------------
 --2.1 (1) NO PROBLEMS HERE
-CREATE DATABASE Advising_Team_61
+CREATE DATABASE Advising_Team
 Go
+USE Advising_Team
+GO
 --2.1 (2)
 --TODO:
 --1)THINK OF MORE CONSTRAINTS
@@ -33,7 +45,7 @@ Create Proc CreateAllTables
 		semester int NOT NULL,--NOT NULL BASED ON (2.3-A)
 		acquired_hours int,--NULL BASED ON (2.3-A)
 		assigned_hours int,--NULL BASED ON (2.3-A) and Ashan mawgouda f M1
-		advisor_id int Foreign Key references Advisor, --NULL BASED ON (2.3-A)
+		advisor_id int CONSTRAINT fk4 Foreign Key references Advisor, --NULL BASED ON (2.3-A)
 		CHECK (gpa BETWEEN 0.7 AND 5)--GPA CONSTRAINT BASED ON LOGIC
 	);
 	--INSERT VALUES IN (2.3-BB)
@@ -53,8 +65,8 @@ Create Proc CreateAllTables
 	);
 	--INSERT VALUES IN (NO IDEA)
 	Create Table PreqCourse_course (-- NO PROBLEMS HERE
-		prerequisite_course_id int FOREIGN KEY references Course, 
-		course_id int FOREIGN KEY references Course,
+		prerequisite_course_id int CONSTRAINT fk6 FOREIGN KEY references Course, 
+		course_id int CONSTRAINT fk7 FOREIGN KEY references Course,
 		Primary Key (prerequisite_course_id, course_id),
 	);
 	--INSERT VALUES IN (NO IDEA)
@@ -67,15 +79,15 @@ Create Proc CreateAllTables
 	);
 	--INSERT VALUES IN (NO IDEA)
 	Create Table Instructor_Course (--NO PROBLEMS HERE
-		course_id int FOREIGN KEY references Course, 
-		instructor_id int FOREIGN KEY references Instructor,
+		course_id int CONSTRAINT fk8 FOREIGN KEY references Course, 
+		instructor_id int CONSTRAINT fk9 FOREIGN KEY references Instructor,
 		Primary Key (course_id,instructor_id)
 	);
 	--INSERT VALUES IN (2.3-I)
 	Create Table Student_Instructor_Course_Take (--NO PROBLEMS HERE
-		student_id int Foreign Key references Student, 
-		course_id int Foreign Key references Course, 
-		instructor_id int Foreign Key references Instructor, 
+		student_id int CONSTRAINT fk10 Foreign Key references Student, 
+		course_id int CONSTRAINT fk11 Foreign Key references Course, 
+		instructor_id int CONSTRAINT fk12 Foreign Key references Instructor, 
 		semester_code varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-I)
 		exam_type varchar(40) DEFAULT 'Normal',--DEFAULT VALUE BASED ON M2 DESC 
 		grade varchar(40),--NULL BASED ON (2.3-I) 
@@ -90,20 +102,18 @@ Create Proc CreateAllTables
 	);
 	--INSERT VALUES IN (NO IDEA)
 	Create Table Course_Semester (--NO PROBLEMS HERE
-		course_id int FOREIGN KEY references Course, 
-		semester_code varchar(40) Foreign Key references Semester,
+		course_id int CONSTRAINT fk13 FOREIGN KEY references Course, 
+		semester_code varchar(40) CONSTRAINT fk14 Foreign Key references Semester,
 		Primary Key(course_id,semester_code)
 	);
 	--INSERT VALUES IN (NO IDEA) // INSTRUCTOR/COURSE In (2.3-H)
 	Create Table Slot (--NOT NULLS BASED ON THE ASSUMPTION THAT EVERY SLOT THAT EXISTS IS ALREADY STORED AND YOU JUST UPDATE THE INSTRUCTOR/COURSE THAT IS ASSIGNED TO THIS SLOT // WE CAN THINK OF MORE CONSTRAINTS
 		slot_id int Primary Key, 
-		day varchar(40) NOT NULL,--IN(Sundat,Monday,...) 
+		day varchar(40) NOT NULL,--IN(Sunday,Monday,...) 
 		time varchar(40) NOT NULL,--IN(1st,2nd,3rd,...) 
 		location varchar(40) NOT NULL, 
-		course_id int Foreign Key references Course-- NULL BASED ON (2.3-H) 
-		ON UPDATE CASCADE
-		ON DELETE CASCADE,
-		instructor_id int Foreign Key references Instructor -- NULL BASED ON (2.3-H)
+		course_id int CONSTRAINT fk15 Foreign Key references Course,-- NULL BASED ON (2.3-H) 
+		instructor_id int CONSTRAINT fk16 Foreign Key references Instructor -- NULL BASED ON (2.3-H)
 	);
 	--INSERT VALUES IN (2.3-R)
 	Create Table Graduation_Plan (--NO PROBLEMS HERE
@@ -119,7 +129,7 @@ Create Proc CreateAllTables
 	Create Table GradPlan_Course (--NO PROBLEMS HERE
 		plan_id int, 
 		semester_code varchar(40), 
-		course_id int FOREIGN KEY references Course,
+		course_id int CONSTRAINT fk25 FOREIGN KEY references Course,
 		PRIMARY KEY(plan_id, semester_code, course_id),
 		FOREIGN KEY(plan_id,semester_code) references Graduation_Plan
 	);
@@ -130,8 +140,8 @@ Create Proc CreateAllTables
 		comment varchar(40) NOT NULL,-- NOT NULL BASED ON  (2.3-DD // 2.3-EE)
 		status varchar(40) DEFAULT 'pending',--DEFAULT VALUE BASED ON M2 DESC 
 		credit_hours int,--NULL BASED ON (2.3-DD // 2.3-EE)
-		student_id int FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON  (2.3-DD // 2.3-EE) 
-		advisor_id int FOREIGN KEY references Advisor NOT NULL,--NULL UNTIL ADVISOR RESPONDS? OR PUT THE CURRENT STUDENT'S ADVISOR 
+		student_id int CONSTRAINT fk19 FOREIGN KEY references Student NOT NULL,--NOT NULL BASED ON  (2.3-DD // 2.3-EE) 
+		advisor_id int CONSTRAINT fk20 FOREIGN KEY references Advisor NOT NULL,--NULL UNTIL ADVISOR RESPONDS? OR PUT THE CURRENT STUDENT'S ADVISOR 
 		course_id int,--NULL BASED ON (2.3-DD // 2.3-EE)
 		CHECK (status IN ('pending','accepted','rejected'))--BASED ON M2 DESC 
 	);
@@ -140,22 +150,22 @@ Create Proc CreateAllTables
 		exam_id int PRIMARY KEY IDENTITY,--IDENTITY BASED ON (2.3-K)
 		date DATETIME NOT NULL,--DATETIME IN 2.3-K // DATE IN UPDATED SCHEMA // NOT NULL BASED ON (2.3-K) 
 		type varchar(40) NOT NULL,--NOT NULL BASED ON (2.3-K) 
-		course_id int FOREIGN KEY references Course NOT NULL,--NOT NULL BASED ON (2.3-K) 
+		course_id int CONSTRAINT fk21 FOREIGN KEY references Course NOT NULL,--NOT NULL BASED ON (2.3-K) 
 		CHECK(type in('First_makeup','Second_makeup'))--BASED ON M2 DESC
 	);
 	--INSERT VALUES IN (2.3-II // 2.3-KK)
 	Create Table Exam_Student (--NO PROBLEMS HERE
-		exam_id int FOREIGN KEY references MakeUp_Exam, 
-		student_id int FOREIGN KEY references Student, 
+		exam_id int CONSTRAINT fk2 FOREIGN KEY references MakeUp_Exam, 
+		student_id int CONSTRAINT fk22 FOREIGN KEY references Student, 
 		course_id int NOT NULL,--NOT NULL BASED ON (2.3-II // 2.3-KK) 
 		PRIMARY KEY(exam_id,student_id)
 	);
 	--INSERT VALUES IN (NO IDEA)
 	Create Table Payment(--NULL/NOT NULL BASED ON NOTHING // DERIVED ATTRIBUTE IS NOT DERIVED IN THE SCHEMA
-		payment_id int PRIMARY KEY, 
+		payment_id int identity PRIMARY KEY, 
 		amount int NOT NULL,
 		deadline DATETIME NOT NULL, 
-		n_installments as DATEDIFF(month,start_date,deadline), --CASE WHEN (year(deadline)=year(start_date)) THEN (MONTH(deadline) - MONTH(start_date)) ELSE ((12-MONTH(start_date))+MONTH(deadline)) END,--SAME AS DEADLINE COMMENT 
+		n_installments as DATEDIFF(month,start_date,deadline), 
 		status varchar(40) DEFAULT 'notPaid',--DEFAULT VALUE BASED ON M2 DESC 
 		fund_percentage decimal(5,2) NOT NULL,
 		start_date DATETIME NOT NULL,
@@ -201,25 +211,122 @@ GO
 ---------------------------------------------------------------------------------------
 --2.1 (4)
 CREATE PROCEDURE clearAllTables
-AS
-    TRUNCATE table Student_instructor_course_take
-    TRUNCATE table Slot
-    TRUNCATE Table PreqCourse_course
-    TRUNCATE Table Instructor_Course
-    TRUNCATE Table GradPlan_Course
-    TRUNCATE Table Graduation_Plan
-    TRUNCATE Table Course_semester
-    TRUNCATE Table Request
-    TRUNCATE Table Exam_Student
-    TRUNCATE Table MakeUp_Exam
-    TRUNCATE Table Installment
+AS	
+
+	ALTER TABLE GradPlan_Course
+	Drop fk1,fk25
+
+	ALTER TABLE Exam_Student
+	DROP fk2,fk22
+
+	ALTER TABLE Installment
+	DROP fk3
+
+	ALTER TABLE Student
+	DROP fk4
+
+	ALTER TABLE Student_Phone
+	DROP fk5
+
+	ALTER TABLE PreqCourse_course
+	DROP fk6,fk7
+
+	ALTER TABLE Instructor_Course
+	DROP fk8,fk9
+
+	ALTER TABLE Student_Instructor_Course_Take
+	DROP fk10,fk11,fk12
+
+	ALTER TABLE Course_Semester
+	DROP fk13,fk14
+
+	ALTER TABLE Slot
+	DROP fk15,fk16
+
+	ALTER TABLE Graduation_Plan
+	DROP fk17,fk18
+
+	ALTER TABLE Request
+	DROP fk19,fk20
+	
+	ALTER TABLE MakeUp_Exam
+	DROP fk21
+
+	ALTER TABLE Payment
+	DROP fk23,fk24
+
+    TRUNCATE TABLE Student_instructor_course_take
+    TRUNCATE TABLE Slot
+    TRUNCATE TABLE PreqCourse_course
+    TRUNCATE TABLE Instructor_Course
+    TRUNCATE TABLE GradPlan_Course
+    TRUNCATE TABLE Graduation_Plan
+    TRUNCATE TABLE Course_semester
+    TRUNCATE TABLE Request
+    TRUNCATE TABLE Exam_Student
+    TRUNCATE TABLE MakeUp_Exam
+    TRUNCATE TABLE Installment
     TRUNCATE TABLE Payment
     TRUNCATE TABLE Instructor
     TRUNCATE TABLE Course
     TRUNCATE Table Semester
     TRUNCATE TABLE Student_Phone
-    TRUNCATE table Student
-    TRUNCATE table Advisor
+    TRUNCATE TABLE Student
+    TRUNCATE TABLE Advisor
+
+	ALTER TABLE GradPlan_Course
+	ADD CONSTRAINT fk1 FOREIGN KEY(plan_id,semester_code) references Graduation_Plan,
+		CONSTRAINT fk25 FOREIGN KEY(course_id) references Course
+
+	ALTER TABLE Exam_Student
+	ADD CONSTRAINT fk2  FOREIGN KEY(exam_id) references MakeUp_Exam,
+		CONSTRAINT fk22 FOREIGN KEY(student_id) references Student 
+
+	ALTER TABLE Installment
+	ADD CONSTRAINT fk3 FOREIGN KEY(payment_id) references Payment
+
+	ALTER TABLE Student
+	ADD CONSTRAINT fk4 FOREIGN KEY(advisor_id) references Advisor
+
+	ALTER TABLE Student_Phone
+	ADD CONSTRAINT fk5 FOREIGN KEY(student_id) references Student
+
+	ALTER TABLE PreqCourse_course
+	ADD CONSTRAINT fk6 FOREIGN KEY(prerequisite_course_id) references Course,
+		CONSTRAINT fk7 FOREIGN KEY(course_id) references Course
+
+	ALTER TABLE Instructor_Course
+	ADD CONSTRAINT fk8 FOREIGN KEY(course_id) references Course,
+		CONSTRAINT fk9 FOREIGN KEY(instructor_id) references Instructor
+
+	ALTER TABLE Student_Instructor_Course_Take
+	ADD CONSTRAINT fk10 FOREIGN KEY(student_id) references Student,
+		CONSTRAINT fk11 FOREIGN KEY(course_id) references Course,
+		CONSTRAINT fk12 FOREIGN KEY(instructor_id) references Instructor
+
+	ALTER TABLE Course_Semester
+	ADD CONSTRAINT fk13 FOREIGN KEY(course_id) references Course,
+		CONSTRAINT fk14 FOREIGN KEY(semester_code) references Semester
+	
+	ALTER TABLE Slot
+	ADD CONSTRAINT fk15 FOREIGN KEY(course_id) references Course, 
+		CONSTRAINT fk16 FOREIGN KEY(instructor_id) references Instructor 
+
+	ALTER TABLE Graduation_Plan
+	ADD CONSTRAINT fk17 FOREIGN KEY(advisor_id) references Advisor,
+		CONSTRAINT fk18 FOREIGN KEY(student_id) references Student
+
+	ALTER TABLE Request
+	ADD	CONSTRAINT fk19 FOREIGN KEY(student_id) references Student,
+		CONSTRAINT fk20 FOREIGN KEY(advisor_id) references Advisor
+
+	ALTER TABLE MakeUp_Exam
+	ADD CONSTRAINT fk21 FOREIGN KEY(course_id) references Course
+
+	ALTER TABLE Payment
+	ADD	CONSTRAINT fk23 FOREIGN KEY(student_id) references Student,
+		CONSTRAINT fk24 FOREIGN KEY(semester_code) references Semester
+		
 GO
 ---------------------------------------------------------------------------------------
 --2.2 (A)
@@ -233,18 +340,18 @@ GO
 --2.2 (B)
 CREATE view view_Course_prerequisites
 	AS
-	SELECT c.*,pre.prerequisite_course_id
+	SELECT c.*,pre.prerequisite_course_id,prec.name as 'Prerequisite course name '
 		FROM Course c
-			LEFT  JOIN PreqCourse_course pre ON c.course_id = pre.course_id 
+			LEFT OUTER JOIN PreqCourse_course pre ON c.course_id = pre.course_id 
 
 GO
 --2.2 (C)
 CREATE view Instructors_AssignedCourses
 	AS
-	SELECT Ins.*,Cou.course_id,Cou.name
+	SELECT Ins.instructor_id,Ins.name as 'Instructor name',Ins.email,Ins.faculty,Ins.office,Cou.course_id,Cou.name AS 'Course name'
 		FROM Instructor Ins
 			LEFT JOIN Instructor_Course InsCou ON Ins.instructor_id = InsCou.instructor_id
-			INNER JOIN Course Cou ON InsCou.course_id = Cou.course_id
+			LEFT JOIN Course Cou ON InsCou.course_id = Cou.course_id
 GO
 --2.2 (D)
 CREATE view Student_Payment
@@ -252,16 +359,15 @@ CREATE view Student_Payment
 	SELECT P.*,s.f_name,s.l_name
 		FROM Payment P 
 			INNER JOIN Student s ON P.student_id = s.student_id
-			--INNER JOIN Installment I ON P.payment_id = I.payment_id
 GO
 
 --2.2 (E)
 CREATE view Courses_Slots_Instructor
 	AS
-	SELECT c.course_id as CourseID , c.name as 'Course.name' , s.slot_id as 'Slot ID' , s.day as 'Slot Day' , 
+	SELECT c.course_id as CourseID , c.name as 'Course name' , s.slot_id as 'Slot ID' , s.day as 'Slot Day' , 
             s.time as 'Slot Time', s.location as 'Slot Location' , I.name as 'Slot’s Instructor name'
 		FROM Course c 
-			LEFT JOIN Slot s ON c.course_id = s.course_id
+			LEFT OUTER JOIN Slot s ON c.course_id = s.course_id
 			INNER JOIN Instructor I ON I.instructor_id = s.instructor_id
 GO
 
@@ -275,7 +381,7 @@ GO
 --2.2 (G)
 CREATE VIEW Students_Courses_transcript
 	AS
-	SELECT s.student_id,s.f_name + s.l_name AS 'student name',c.course_id,c.name AS 'course name',r.exam_type,r.grade,r.semester_code,i.name AS 'instructor name'
+	SELECT s.student_id,s.f_name +' '+ s.l_name AS 'student name',c.course_id,c.name AS 'course name',r.exam_type,r.grade,r.semester_code,i.name AS 'instructor name'
 		FROM Student s, Course c, Instructor i, Student_Instructor_Course_Take r
 		WHERE s.student_id=r.student_id AND
 			  c.course_id=r.course_id AND
@@ -362,11 +468,9 @@ GO
 -- Brolosy
 CREATE PROCEDURE AdminListStudentsWithAdvisors
 	AS
-	SELECT * 
-	-- I THINK LEFT OUTER JOIN HERE IS TRIVIAL BECAUSE THERE WONT
-	--BE ANY REGISTERED STUDENTS WITH NO ADVISORS
-	FROM Student s LEFT OUTER JOIN Advisor a
-	ON s.advisor_id = a.advisor_id
+		SELECT s.f_name+' '+s.l_name AS student_name ,A.name as advisor_name--should i get all info wla names bs?
+		-- I THINK LEFT OUTER JOIN HERE IS TRIVIAL BECAUSE THERE WONT
+		FROM Student s LEFT OUTER JOIN Advisor a ON s.advisor_id = a.advisor_id
 
 	GO
 
@@ -478,9 +582,13 @@ GO
 CREATE PROC Procedures_AdminDeleteCourse
 	@courseID int
 	AS
-	DELETE FROM Course
-	WHERE course_id=@courseID
+		DELETE FROM Course
+		WHERE course_id=@courseID
 
+		UPDATE Slot
+		SET course_id=NULL, 
+			instructor_id=NULL
+		WHERE course_id=@courseID
 GO
 --2.3(N)
 CREATE PROC  Procedure_AdminUpdateStudentStatus
@@ -499,24 +607,27 @@ CREATE PROC  Procedure_AdminUpdateStudentStatus
 				
 	WHERE student_id=@StudentID
 GO
---2.3(O)
+
+--2.3(O) COLUMNS
 CREATE VIEW all_Pending_Requests
-AS
-SELECT r.request_id,r.type,r.comment,r.credit_hours,r.course_id, s.f_name+' '+s.l_name AS Student_name,a.name
+	AS
+		SELECT r.request_id,r.type,r.comment,r.credit_hours,r.course_id, s.f_name+' '+s.l_name AS Student_name,a.name
 		FROM Request r INNER JOIN Student s ON r.student_id=s.student_id 
 					   INNER JOIN Advisor a ON r.advisor_id=a.advisor_id
 		WHERE r.status='pending'
 GO
---2.3(P)
+
+--2.3(P) DIFFERENCE BETWEEN THIS AND (2.3-H) // SHOULD WE DELETE THE SLOT?? ANA FAKER EL TA ALET KEDA
 CREATE PROC Procedures_AdminDeleteSlots
 	@current_semester varchar(40)
 	AS
-	UPDATE Slot
-	SET course_id=NULL,instructor_id=NULL
-	WHERE EXISTS(
-	SELECT *
-	FROM Course_Semester cs INNER JOIN Course ON cs.course_id=c.course_id
-	WHERE c.is_offered=0 AND cs.semester_code=@current_semester AND Slot.course_id=cs.course_id)
+		UPDATE Slot
+		SET course_id=NULL,
+			instructor_id=NULL
+		WHERE EXISTS(
+			SELECT *
+			FROM Course_Semester cs INNER JOIN Course c ON cs.course_id=c.course_id
+			WHERE c.is_offered=0 AND cs.semester_code=@current_semester AND Slot.course_id=cs.course_id)
 GO
 --2.3(Q)
 CREATE FUNCTION FN_AdvisorLogin (@ID int, @password varchar(40))
@@ -541,12 +652,8 @@ CREATE PROC Procedures_AdvisorCreateGP
 	@advisor_id int,
 	@student_id int
 	AS
-	DECLARE @expected_grad_semester VARCHAR(40)
-	SELECT @expected_grad_semester=semester_code
-	FROM Semester
-	WHERE @expected_graduation_date BETWEEN start_date AND end_date
-	INSERT INTO Graduation_Plan
-	Values(@Semester_code,@sem_credit_hours,@expected_grad_semester,@advisor_id,@student_id)
+		INSERT INTO Graduation_Plan
+		VALUES(@Semester_code,@sem_credit_hours,@expected_graduation_date,@advisor_id,@student_id)
 GO
 --2.3(S)
 CREATE PROC Procedures_AdvisorAddCourseGP
@@ -565,14 +672,15 @@ CREATE PROC Procedures_AdvisorAddCourseGP
 	INSERT INTO GradPlan_Course
 	VALUES(@plan_id,@Semester_code,@course_id)
 GO
---2.3(T)
+
+--2.3(T) NO PROBLEM HERE
 CREATE PROC Procedures_AdvisorUpdateGP
 	@expected_grad_semster varchar(40),
 	@studentID int
 	AS 
-	UPDATE Graduation_Plan
-	SET expected_grad_semester=@expected_grad_semster
-	WHERE student_id=@studentID
+		UPDATE Graduation_Plan
+		SET expected_grad_semester=@expected_grad_date
+		WHERE student_id=@studentID
 GO
 --2.3(U)
 CREATE PROC Procedures_AdvisorDeleteFromGP
@@ -580,67 +688,111 @@ CREATE PROC Procedures_AdvisorDeleteFromGP
 	@semester_code varchar(40),
 	@course_ID INT
 	AS
-
-	DECLARE @plan_id INT
-	SELECT @plan_id=plan_id
-	FROM Graduation_Plan
-	WHERE student_id=@student_id AND semester_code=@semester_code
+		DECLARE @plan_id INT
+		
+		SELECT @plan_id=plan_id
+		FROM Graduation_Plan
+		WHERE student_id=@student_id AND semester_code=@semester_code
 
 	DELETE FROM GradPlan_Course WHERE (plan_id=@plan_id AND semester_code=@semester_code AND course_id=@course_ID)
 GO
 
---2.3(V)
+--2.3(V) COLUMNS
+CREATE FUNCTION FN_Advisors_Requests(@advisorID int)
+	RETURNS TABLE
+	AS
+		RETURN(
+			SELECT *
+			FROM Request r
+			WHERE r.advisor_id = @advsorID
+		)
+GO
 
 --2.3(W)
---What is the meaning of "assigned hours"? In order to implement the 34 ch threshhold
+-- CREATE PROC Procedures_AdvisorApproveRejectCHRequest
+-- 	@RequestID int, 
+-- 	@Current_semester_code varchar(40)
+-- 	AS
+-- 	DECLARE 
+-- 	@credit_hrs INT,
+-- 	@studentID INT,
+-- 	@gpa decimal(3,2),
+-- 	@assignedhrs INT,
+-- 	@tot_hours_curr_sem INT
 
+-- 	SELECT @credit_hrs=credit_hours, @student_ID=r.student_id, @gpa=s.gpa,@assignedhrs=s.assigned_hours
+-- 	FROM Request r INNER JOIN student s ON r.student_id=s.student_id
+-- 	WHERE r.request_id=@RequestID
+
+-- 	SELECT @tot_hours_curr_sem= SUM(c.credit_hours)
+-- 	FROM Student_Instructor_Course_Take st INNER JOIN Course c ON st.course_id=c.course_id
+-- 	WHERE st.student_id=@studentID AND
+-- 		  st.semester_code=@Current_semester_code
+		
+	-- IF (@gpa<=3.7 AND @credit_hrs<=3 AND (@tot_hours_curr_sem+@assigned_hours+@credit_hrs<=34))
+	-- 	BEGIN 
+	-- 		UPDATE Request
+	-- 		SET status='accepted'
+	-- 		WHERE request_id=@RequestID
+
+	-- 		UPDATE Student
+	-- 		SET assigned_hours=@assignedhrs+@credit_hrs
+	-- 		WHERE student_id=@studentID
+	-- 	END
+	-- ELSE
+	-- 	BEGIN
+	-- 		UPDATE Request
+	-- 			SET status='rejected'
+	-- 			WHERE request_id=@RequestID
+	-- 	END 
+
+GO
 --2.3(X)
 CREATE PROC Procedures_AdvisorViewAssignedStudents
 	@AdvisorID int, 
 	@major varchar(40)
 	AS
 	SELECT s.student_id,s.f_name+' '+s.l_name AS Student_Name,s.major,c.name AS course_name
-	FROM Student s, Student_Instructor_Course_Take r, Course c
+	FROM  Student_Instructor_Course_Take r INNER JOIN Course c ON r.course_id=c.course_id
+          RIGHT OUTER JOIN Student s ON s.student_id=r.student_id
 	WHERE s.advisor_id=@AdvisorID AND 
-		  s.major=@major AND 
-		  s.student_id=r.student_id AND 
-		  s.course_id=c.course_id
+		  s.major=@major 
 GO
 --2.3(Y)
 CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
-	@RequestID int, 
-	@studentID int, 
-	@advisorID int
+	@RequestID int,
+	@current_semester_code varchar(40)
 	AS
 	DECLARE @crs_id int,
 	@flag int,
 	@assigned_hours int,
-	@credit_hours int
+	@credit_hours int,
+	@semesterCode VARCHAR(40)
 
 	SELECT @assigned_hours=assigned_hours
 	FROM Student
 	WHERE student_id=@studentID
 	
-	SELECT @crs_id=course_id
-	FROM Request
-	WHERE request_id=@RequestID AND
-		  student_id=@studentID AND
-		  advisor_id=@advisorID
-	
-	SELECT @credit_hours=credit_hours
-	FROM Course 
-	WHERE course_id=@crs_id
+	SELECT @credit_hours=c.credit_hours,@crs_id=r.crs_id,@semesterCode=cs.semester_code
+	FROM Request r 
+		 INNER JOIN Course c ON r.course_id=c.course_id
+		 INNER JOIN  Course_Semester cs on cs.course_id=c.course_id
+	WHERE r.request_id=@RequestID AND
+		  r.student_id=@studentID AND
+		  r.advisor_id=@advisorID
 
-	SELECT @flag=count(*)
+	SELECT @not_taken_prereq=count(*)
 	FROM PreqCourse_course pre
 	WHERE course_id=@crs_id AND NOT EXISTS (
 		SELECT *
 		FROM Student_Instructor_Course_Take
 		WHERE student_id=@studentID AND 
-			  course_id=pre.prerequisite_course_id
+			  course_id=pre.prerequisite_course_id AND
+			  semester_code <> @semesterCode AND --to ensure that the student is not taking the prereq now
+			  grade is not null and grade not in ('F','FF','FA') --to ensure that the prerequisite is taken AND PASSED (tha is not null is extra,I've already checked eno msh byakhod el course delwaaty)
 	)
 
-	IF (@flag=0 AND @assigned_hours>=@credit_hours)
+	IF (@not_taken_prereq=0 AND @assigned_hours>=@credit_hours)
 		BEGIN
 		UPDATE Request
 		SET status='accepted'
@@ -648,27 +800,30 @@ CREATE PROC Procedures_AdvisorApproveRejectCourseRequest
 			student_id=@studentID AND
 			advisor_id=@advisorID
 		UPDATE Student
-		SET assigned_hours=@assigned_hours-@credit_hours--Update assigned hours in the proc?
+		SET assigned_hours=@assigned_hours-@credit_hours
 		WHERE student_id=@studentID
+		INSERT INTO Student_Instructor_Course_Take(student_id,course_id,semester_code)
+		VALUES (@studentID,@crs_id,@semesterCode);
 		END
 	ELSE
-	BEGIN
+		BEGIN
 		UPDATE Request
 		SET status='rejected'
 		WHERE request_id=@RequestID AND
 			student_id=@studentID AND
 			advisor_id=@advisorID
 		END
-		--Update StudentInstructorCourse Table with the new entry?
+		
+	
 GO
 
 --2.3(Z)
 CREATE PROC Procedures_AdvisorViewPendingRequests
 	@Advisor_ID int
 	AS 
-	SELECT request_id, type,comment,credit_hours,student_id,course_id ---student_id abayeno or no?
-	FROM request 
-	WHERE advisor_id=@advisor_id AND status='pending'
+	SELECT request_id, type,comment,credit_hours,s.f_name,s.l_name,s.student_id,course_id ---student_id abayeno or no?
+	FROM request r INNER Join student s on r.student_id = s.student_id
+	WHERE  status='pending' AND s.advisor_id = @Advisor_ID
 GO
 
 --2.3(AA)
@@ -698,6 +853,19 @@ GO
 
 --2.3(CC)
 
+CREATE FUNCTION FN_SemsterAvailableCourses
+(@semester_code varchar(40))
+RETURNS TABLE
+AS 
+RETURN
+(
+	SELECT c.course_id as 'CourseID', c.name as 'Course Name', c.credit_hours as 'Credit Hours'
+	FROM Course c, Course_Semester r
+	WHERE c.course_id = r.course_id AND r.semester_code = @semester_code
+			AND c.is_offered = 1
+)
+
+GO
 
 --2.3(DD)
 CREATE PROC Procedures_StudentSendingCourseRequest
@@ -759,53 +927,19 @@ CREATE PROC Procedures_StudentRegisterFirstMakeup
 	FROM MakeUp_Exam
 	WHERE course_id=@courseID AND type='First_makeup'
 
-	IF (@grade in ('F','FF','FA'))--ADD ABS
+	IF ( NOT EXISTS ( SELECT * 
+					  FROM Student_Instructor_Course_Take
+					  WHERE student_id=@StudentID AND course_id=@courseID AND exam_type LIKE '%makeup' 
+					) AND 
+		(@grade IS NULL or @grade in ('F','FF')))--ADD FA?
 	BEGIN
 		INSERT INTO Exam_Student
-		VALUES(@examID,@studentID,@course_id)
-		UPDATE Student_Instructor_Course_Take
-		SET exam_type='First_makeup'
-		WHERE student_id=@StudentID AND course_id=@courseID AND semester_code=@studentCurrent_semester 
+			VALUES(@examID,@studentID,@course_id)
+		INSERT INTO Student_Instructor_Course_Take(student_id,course_id,semester_code,exam_type)
+			VALUES(@StudentID,@courseID,@studentCurrent_semester,'First_makeup')
 	END
 GO
-
---2.3(JJ)
--- CREATE FUNCTION FN_StudentCheckSMEligiability (@CourseID int, @Student_ID int)
--- RETURNS BIT AS
--- 	BEGIN
--- 	DECLARE @failed_courses INT,
--- 	@grade varchar(40),
--- 	@counteven INT,
--- 	@countodd INT
-
--- 	SELECT @grade=grade
--- 	FROM Student_Instructor_Course_Take
--- 	WHERE student_id=@StudentID AND course_id=@courseID AND exam_type='First_makeup'
-
--- 	IF @grade NOT IN ('F','FF','FA')--Add Abs
--- 		BEGIN
--- 		RETURN 0
--- 		END
-
--- 	SELECT @countodd=count(*)
--- 	FROM Student_Instructor_Course_Take
--- 	WHERE student_id=@StudentID AND course_id=@courseID AND grade in ('F','FF','FA') AND semester_code LIKE 'W__'
-
--- 	SELECT @counteven=count(*)
--- 	FROM Student_Instructor_Course_Take
--- 	WHERE student_id=@StudentID AND course_id=@courseID AND grade in ('F','FF','FA') AND semester_code LIKE 'S__'
-
--- 	IF @countodd>2 OR @counteven>2
--- 		BEGIN
--- 		RETURN 0
--- 		END
-
-	
--- 	RETURN 1 -- Can u attend 2nd makeup if u failed the course 'F'
--- 	END --WHAT TO DO ABOUT REQUIRED COURSES
---I didn't delete it because there's comments written here nes'alhom and then n delete it
-
-GO
+--2.3(JJ)	
 create function FN_StudentCheckSMEligiability (@CourseID int, @StudentID int)
 	RETURNS BIT
 	AS
@@ -813,41 +947,66 @@ create function FN_StudentCheckSMEligiability (@CourseID int, @StudentID int)
 	BEGIN
 
 	Declare 
-	@count INT,
-	@count2 INT,
-	@isElig BIT,
-	@grade VARCHAR(40)
+	@count INT
 
-	SELECT @grade=grade
-		FROM Student_Instructor_Course_Take
-		WHERE student_id=@StudentID AND course_id=@courseID AND exam_type='First_makeup'
+    IF EXISTS(
+                SELECT grade
+                FROM Student_Instructor_Course_Take
+                WHERE student_id=@StudentID AND course_id=@CourseID AND 
+                (exam_type='First_makeup' OR exam_type='Normal') AND  --I'm selecting any record that shows that the student has passed this course
+                grade NOT IN ('F','FF','FA') AND grade IS NOT NULL
+                UNION
+                SELECT grade
+                FROM Student_Instructor_Course_Take
+                WHERE student_id=@StudentID AND course_id=@courseID AND exam_type='Second_makeup'--I'm selecting any record that shows that the student has already registered for a second makeup before
 
-	IF @grade NOT IN ('F','FF','FA')--Add Abs
-		BEGIN
-		RETURN 0
-		END
+            )
+        OR NOT EXISTS(
+                SELECT *
+                FROM Student_Instructor_Course_Take
+                WHERE student_id=@StudentID AND course_id=@courseID--checking if the student has never taken this course before
+            )
+    BEGIN
+        RETURN 0;
+    END
 
-	SELECT @count = count(*)
-	from Student_Instructor_Course_Take
-	WHERE semester_code like ('W__') AND student_id = @studentID and grade in ('F','FF','FA') and exam_type = 'first_makeup'
 
-	SELECT @count2 = count(*)
-	from Student_Instructor_Course_Take
-	WHERE semester_code like ('S__') AND student_id = @studentID and grade in ('F','FF','FA') and exam_type = 'first_makeup'
+    IF EXISTS ( SELECT *
+                FROM Course
+                WHERE course_id=@CourseID AND semester % 2=0) --check that course is even
+    BEGIN 
+        SELECT @count = count(DISTINCT c.course_id)
+        from Student_Instructor_Course_Take c
+        WHERE (c.semester_code like ('S__') OR c.semester_code like ('S__R2')) AND c.student_id = @StudentID
+		AND (c.grade in ('F','FF','FA') or c.grade is null) and not exists(SELECT *			
+													FROM Student_Instructor_Course_Take s		
+													WHERE c.course_id = s.course_id AND s.grade NOT IN ('F','FF','FA') and s.grade is not null
+													AND  s.student_id=@StudentID )
+    END
 
-	if @count<=2 and @count<=2
-		BEGIN
-		set @isElig = 1
-		END
-	ELSE
-		BEGIN
-		set @isElig = 0
-		END
-	return @isElig
+	ELSE 
+	BEGIN
+		SELECT @count = count(DISTINCT course_id)
+        from Student_Instructor_Course_Take c
+        WHERE (semester_code like ('W__') OR semester_code like ('S__R1')) AND student_id = @studentID 
+		AND (grade in ('F','FF','FA') or grade is null) and not exists(SELECT *
+													FROM Student_Instructor_Course_Take s
+													WHERE c.course_id = s.course_id AND s.grade NOT IN ('F','FF','FA')  and s.grade is not null
+													AND  s.student_id=@StudentID)
+	END
+	
+	if @count>2
+	BEGIN
+		return 0
 	END
 
+	return 1
+END
 GO
-
+print(dbo.FN_StudentCheckSMEligiability(1,8)) 
+SELECT *
+FROM Student_Instructor_Course_Take
+GO
 --2.3(KK)
 CREATE PROC Procedures_StudentRegisterSecondMakeup
 	@StudentID int, 
@@ -863,7 +1022,7 @@ CREATE PROC Procedures_StudentRegisterSecondMakeup
 
 	SET @elig_bit= dbo.FN_StudentCheckSMEligiability(@courseID,@StudentID)
 
-	if (@elig_bit=1)
+	if (@elig_bit=1 and @examID is not null) 
 	BEGIN
 	INSERT INTO Exam_Student
 		VALUES(@examID,@StudentID,@courseID)
@@ -877,17 +1036,34 @@ GO
 --2.3(LL)
 CREATE PROC Procedures_ViewRequiredCourses
 @StudentID int, 
-@Current_semester_code Varchar(40)--me7tagenha fe eh
+@Current_semester_code Varchar(40)
 AS
+	-- DECLARE @oddeven int;
+
+	-- IF (@Current_semester_code like 'S__' or @Current_semester_code like 'S__R2')
+	-- BEGIN
+	-- 	SET @oddeven =0
+	-- END
+	-- ELSE
+	-- BEGIN
+	-- 	SET @oddeven=1
+	-- END
+
 	SELECT c.* --rename column
-	FROM Course c INNER JOIN Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.studentID=@StudentID
-	WHERE  (dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) and s.grade in('F','FF','FA') 
-	
+	FROM Course c INNER JOIN Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.student_id=@StudentID
+				  INNER JOIN Course_Semester cs ON c.course_id=cs.course_id
+	WHERE cs.semester_code=@Current_semester_code AND
+	      (dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) AND --and c.semester %2=@oddeven 
+		  (s.grade in('F','FF','FA')) and not exists(SELECT *			
+													FROM Student_Instructor_Course_Take s2		
+													WHERE c.course_id = s2.course_id AND s2.grade NOT IN ('F','FF','FA') and s2.grade is not null
+													AND  s2.student_id=@StudentID )
+
 	UNION
 
 	SELECT c.*
 	FROM Course c , Student s
-	Where c.major = s.major and s.student_id = @StudentID and s.semester>c.semester and not exists( SELECT ce.*
+	Where c.major = s.major and s.student_id = @StudentID and s.semester >c.semester and not exists( SELECT ce.*
 																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
 																				 WHERE ce.course_id = c.course_id
 																				)
@@ -897,21 +1073,95 @@ GO
 --2.3(MM)
 CREATE PROC Procedures_ViewOptionalCourse
 @StudentID int, 
-@Currentsemestercode Varchar(40)--me7tagenha fe eh
+@Currentsemestercode Varchar(40) --me7tagenha fe eh
 AS
-	
 	SELECT c.*
 	FROM Course c , Student s
-	where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and not exists( SELECT ce.*
-																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
-																				 WHERE ce.course_id = c.course_id
-																				)
+	where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and 
+	NOT EXISTS( SELECT ce.*
+	FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+	WHERE ce.course_id = c.course_id AND NOT EXISTS(
+		SELECT p.prerequisite_course_id
+		FROM PreqCourse_course
+		WHERE ce.course_id=p.course_id
+		EXCEPT 
+		SELECT pr.prerequisite_course_id
+		FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
+		WHERE ce.course_id=pre.course_id
+	)
+	)
+	
 GO
 
 --2.3(NN)
+--Add on this the courses that belong to the major that the student hasn't taken it yet
+CREATE PROC Procedures_ViewMS 
+@StudentID int
+AS
+	-- SELECT c.*
+	-- FROM Course c , Student s
+	-- where  c.major = s.major and s.student_id = @StudentID and s.semester<=c.semester and 
+	-- NOT EXISTS( SELECT ce.*
+	-- FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+	-- WHERE ce.course_id = c.course_id AND EXISTS(
+	-- 	SELECT p.prerequisite_course_id
+	-- 	FROM PreqCourse_course
+	-- 	WHERE ce.course_id=p.course_id
+	-- 	EXCEPT 
+	-- 	SELECT pr.prerequisite_course_id
+	-- 	FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
+	-- 	WHERE ce.course_id=pre.course_id
+	-- )
+	--)
+	SELECT c.*
+	FROM Course 
+	EXCEPT 
+	(
+		SELECT c.*
+	FROM Course c , Student s
+	where  c.major = s.major and s.student_id = @StudentID and @Currentsemestercode<=c.semester and 
+	NOT EXISTS( SELECT ce.*
+	FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+	WHERE ce.course_id = c.course_id AND NOT EXISTS(
+		SELECT p.prerequisite_course_id
+		FROM PreqCourse_course
+		WHERE ce.course_id=p.course_id
+		EXCEPT 
+		SELECT pr.prerequisite_course_id
+		FROM PreqCourse_course pr INNER JOIN Student_Instructor_Course_Take sct ON pr.prerequisite_course_id=sct.course_id
+		WHERE ce.course_id=pre.course_id
+	)
+	)
+	UNION
+	(
+		SELECT c.* --rename column
+	FROM Course c INNER JOIN Student_Instructor_Course_Take s ON c.course_id=s.course_id AND s.studentID=@StudentID
+	WHERE  (dbo.FN_StudentCheckSMEligiability(c.course_id,@StudentID) = 0) and s.grade in('F','FF','FA') 
+	
+	UNION
 
+	SELECT c.*
+	FROM Course c , Student s
+	Where c.major = s.major and s.student_id = @StudentID and @Current_semester_code >c.semester and not exists( SELECT ce.*
+																				 FROM Course ce INNER JOIN Student_Instructor_Course_Take se ON ce.course_id=se.course_id AND se.studentID=@StudentID
+																				 WHERE ce.course_id = c.course_id
+																				)
+	)
+	)
+GO
 
 --2.3(OO)
+CREATE PROC Procedures_ChooseInstructor
+	@Student_ID int, 
+	@Instructor_ID int,
+	@Course_ID int
+	AS
+	UPDATE Student_Instructor_Course_Take
+	SET instructor_id=@Instructor_ID
+	WHERE student_id=@Student_ID AND course_id=@Course_ID
+
 
 
 --Farahh
+
+

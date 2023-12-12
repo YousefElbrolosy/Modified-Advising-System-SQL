@@ -768,7 +768,7 @@ CREATE PROC Procedures_AdvisorApproveRejectCHRequest
 				FROM Payment p INNER JOIN Installment i on p.payment_id=i.payment_id
 				WHERE p.student_id=@studentID AND p.semester_code=@Current_semester_code AND i.status='notPaid'
 				AND i.deadline>CURRENT_TIMESTAMP
-				GROUP BY payment_id
+				GROUP BY p.payment_id
 
 				UPDATE Payment
 				SET amount=amount+@extra_money
